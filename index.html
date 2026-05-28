@@ -6,9 +6,6 @@
 <title>Emartzon Sportswear</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="styles.css">
-<style>
-
-</style>
 </head>
 <body>
 
@@ -349,12 +346,116 @@
   </div><!-- end adm-scroll -->
 </div><!-- end page-admin -->
 
+<!-- ═══════════════════════════════
+     PROFILE PAGE
+════════════════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="pg-hdr"><h2>👤 My Profile</h2></div>
+  <div class="scroll2" id="profile-scroll">
+
+    <!-- Hero profile card -->
+    <div id="profile-hero-card" style="
+      margin:14px 14px 12px;
+      background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px 18px 18px;
+      position:relative;
+      overflow:hidden;
+    ">
+      <!-- accent glow -->
+      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(245,166,35,.1) 0%,transparent 70%);pointer-events:none"></div>
+      <!-- top accent bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),transparent)"></div>
+
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+        <!-- Big avatar -->
+        <div id="profile-avatar-big" style="
+          width:72px;height:72px;border-radius:50%;
+          background:linear-gradient(135deg,var(--accent),var(--accent2));
+          display:flex;align-items:center;justify-content:center;
+          font-size:30px;font-weight:700;color:var(--bg);
+          flex-shrink:0;overflow:hidden;
+          border:3px solid rgba(245,166,35,.3);
+          box-shadow:0 4px 20px rgba(245,166,35,.2);
+        ">?</div>
+        <div style="flex:1;min-width:0">
+          <div id="profile-name" style="font-size:20px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+          <div id="profile-handle" style="font-size:13px;color:var(--accent);margin-bottom:6px">@—</div>
+          <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);border-radius:20px;padding:3px 10px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#2ecc71"></div>
+            <span style="font-size:11px;color:#2ecc71;font-weight:600">Logged in via Telegram</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Telegram ID</div>
+          <div id="profile-id" style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">—</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Language</div>
+          <div id="profile-lang" style="font-size:13px;font-weight:600;color:var(--light)">—</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Orders Placed</div>
+          <div id="profile-order-count" style="font-size:13px;font-weight:700;color:var(--accent)">0</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Total Spent</div>
+          <div id="profile-total-spent" style="font-size:13px;font-weight:700;color:var(--accent)">ETB 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account actions -->
+    <div style="margin:0 14px 12px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Account</div>
+      <div class="profile-action-row" onclick="goShop()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:20px;width:24px;text-align:center">🛍</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">Continue Shopping</div><div style="font-size:11px;color:var(--gray)">Browse all jerseys</div></div>
+        <div style="color:var(--gray);font-size:18px">›</div>
+      </div>
+      <div class="profile-action-row" onclick="showCart()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:20px;width:24px;text-align:center">🛒</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">My Cart</div><div id="profile-cart-count" style="font-size:11px;color:var(--gray)">0 items</div></div>
+        <div style="color:var(--gray);font-size:18px">›</div>
+      </div>
+      <div class="profile-action-row" onclick="showInfo()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px">
+        <div style="font-size:20px;width:24px;text-align:center">🏪</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">Store Info</div><div style="font-size:11px;color:var(--gray)">Location, hours & contact</div></div>
+        <div style="color:var(--gray);font-size:18px">›</div>
+      </div>
+    </div>
+
+    <!-- Order history -->
+    <div style="margin:0 14px 12px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Order History</div>
+      <div id="profile-orders-list"></div>
+    </div>
+
+    <!-- Telegram info note -->
+    <div style="margin:0 14px 20px;background:rgba(35,157,219,.07);border:1px solid rgba(35,157,219,.2);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <div style="font-size:18px;flex-shrink:0">🔒</div>
+      <div style="font-size:12px;color:var(--gray);line-height:1.6">Your identity is verified by Telegram. No password is stored. Next time you open this app, you'll be logged in automatically.</div>
+    </div>
+
+    <div style="height:20px"></div>
+  </div>
+</div>
+
 <!-- ═══ BOTTOM NAV ═══ -->
 <div class="bot-nav">
   <div class="nav-item active" id="nav-shop" onclick="goShop()"><div class="nav-icon">🏠</div><div class="nav-lbl">Shop</div></div>
   <div class="nav-item" id="nav-search" onclick="goSearch()"><div class="nav-icon">🔍</div><div class="nav-lbl">Search</div></div>
   <div class="nav-item" id="nav-cart" onclick="showCart()"><div class="nav-icon">🛒</div><div class="nav-lbl">Cart</div></div>
   <div class="nav-item" id="nav-info" onclick="showInfo()"><div class="nav-icon">🏪</div><div class="nav-lbl">Store</div></div>
+  <div class="nav-item" id="nav-profile" onclick="showProfile()">
+    <div class="nav-icon" id="nav-profile-icon">👤</div>
+    <div class="nav-lbl">Profile</div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -473,15 +574,17 @@ const DEFAULT_CONFIG = {
 // ── STATE ──────────────────────────────────────────
 let cfg = JSON.parse(localStorage.getItem('emartzon_cfg') || 'null') || deepClone(DEFAULT_CONFIG);
 let cart = [];
+let orderHistory = JSON.parse(localStorage.getItem('emartzon_orders') || '[]');
 let curProduct = null;
 let selSize = "M";
 let selQty = 1;
 let curShipping = null;
-let editingProdIdx = -1; // -1 = new product
+let editingProdIdx = -1;
 let searchActive = false;
 
 function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
 function save(){ localStorage.setItem('emartzon_cfg', JSON.stringify(cfg)); }
+function saveOrders(){ localStorage.setItem('emartzon_orders', JSON.stringify(orderHistory)); }
 function fmt(n){ return cfg.currencyPos==='after' ? n.toLocaleString()+' '+cfg.currency : cfg.currency+' '+n.toLocaleString(); }
 function nextId(){ return Math.max(0,...cfg.products.map(p=>p.id))+1; }
 
@@ -505,26 +608,33 @@ function initLogin() {
   document.getElementById('login-brand-name').innerHTML = `${cfg.brandName1||'emart'}<span>${cfg.brandName2||'zon'}</span>`;
   document.getElementById('login-tagline').textContent = cfg.storeSub || 'Official Football Jerseys · Sportswear';
 
-  // Try to get Telegram WebApp data
-  setTimeout(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a0a');
-        tg.setBackgroundColor('#0a0a0a');
-        const u = tg.initDataUnsafe.user;
-        tgUser = u;
-        showTgUser(u);
+  // Try Telegram WebApp immediately — no delay if user already known
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      tg.ready();
+      tg.expand();
+      try { tg.setHeaderColor('#0a0a0a'); tg.setBackgroundColor('#0a0a0a'); } catch(e){}
+      const u = tg.initDataUnsafe.user;
+      tgUser = u;
+
+      // Check if this user has opened the app before (auto-login)
+      const savedUserId = localStorage.getItem('emartzon_user_id');
+      if (savedUserId && savedUserId === String(u.id)) {
+        // Already logged in before — skip login screen instantly
+        document.getElementById('login-screen').style.display = 'none';
+        bootApp();
       } else {
-        // Not inside Telegram — show "open in Telegram" screen
-        showNotTelegram();
+        // First time — show the login card briefly, then let them tap Continue
+        showTgUser(u);
       }
-    } catch(e) {
-      showNotTelegram();
+    } else {
+      // Slight delay then show fallback
+      setTimeout(showNotTelegram, 900);
     }
-  }, 900); // brief delay so spinner is visible
+  } catch(e) {
+    setTimeout(showNotTelegram, 900);
+  }
 }
 
 function showTgUser(u) {
@@ -557,13 +667,15 @@ function showNotTelegram() {
 }
 
 function enterApp() {
+  // Save this user's Telegram ID so next open skips login
+  if (tgUser) localStorage.setItem('emartzon_user_id', String(tgUser.id));
+
   const screen = document.getElementById('login-screen');
   screen.style.transition = 'opacity .35s ease, transform .35s ease';
   screen.style.opacity = '0';
   screen.style.transform = 'scale(.97)';
   setTimeout(() => {
     screen.style.display = 'none';
-    // Now boot the rest of the app
     bootApp();
   }, 350);
 }
@@ -579,9 +691,14 @@ function bootApp() {
   curShipping = cfg.shipping[0];
   document.getElementById('page-shop').classList.add('app-revealed');
 
-  // Personalize header greeting if we have user
-  if (tgUser) {
+  // Update nav profile avatar
+  updateNavProfileIcon();
+
+  // Welcome toast only on first-ever login (no saved session before)
+  const alreadyKnown = tgUser && localStorage.getItem('emartzon_welcomed_' + tgUser.id);
+  if (tgUser && !alreadyKnown) {
     showToast(`Welcome, ${tgUser.first_name}! 👋`);
+    localStorage.setItem('emartzon_welcomed_' + tgUser.id, '1');
   }
 
   // 5-tap logo → admin PIN
@@ -592,6 +709,24 @@ function bootApp() {
     tapTimer=setTimeout(()=>tapCount=0,700);
     if(tapCount>=5){ tapCount=0; showPinModal(); }
   });
+}
+
+function updateNavProfileIcon() {
+  if (!tgUser) return;
+  const initials = ((tgUser.first_name||'?')[0] + (tgUser.last_name ? tgUser.last_name[0] : '')).toUpperCase();
+  const navIcon = document.getElementById('nav-profile-icon');
+  navIcon.style.cssText = `
+    width:28px;height:28px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;color:var(--bg);
+    font-style:normal;overflow:hidden;
+  `;
+  if (tgUser.photo_url) {
+    navIcon.innerHTML = `<img src="${tgUser.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${initials}'">`;
+  } else {
+    navIcon.textContent = initials;
+  }
 }
 
 // ── THEME ─────────────────────────────────────────
@@ -840,6 +975,22 @@ function placeOrder(){
   document.getElementById('success-msg').textContent = m?.id==='pickup'
     ? `Your order is ready for pickup in 1–2 hours at ${cfg.storeName}. Show this confirmation at the counter!`
     : 'Your order has been placed! You\'ll receive a Telegram confirmation shortly.';
+
+  // Save to order history
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+  orderHistory.push({
+    id: orderId,
+    userId: tgUser ? String(tgUser.id) : 'guest',
+    date: dateStr,
+    total: sub + ship,
+    itemCount: cart.reduce((a,i)=>a+i.qty,0),
+    method: m?.id || 'delivery',
+    methodIcon: m?.icon || '📦',
+    methodName: m?.name || 'Delivery',
+  });
+  saveOrders();
+
   cart=[]; updateBadge(); showPage('success');
 }
 
@@ -856,7 +1007,68 @@ function showInfo(){
   setNav('info'); showPage('info');
 }
 
-// ── SEARCH ────────────────────────────────────────
+// ── PROFILE PAGE ──────────────────────────────────
+function showProfile() {
+  if (!tgUser) { showToast('Not logged in'); return; }
+
+  const u = tgUser;
+  const full = [u.first_name, u.last_name].filter(Boolean).join(' ');
+  const initials = ((u.first_name||'?')[0] + (u.last_name ? u.last_name[0] : '')).toUpperCase();
+
+  // Big avatar
+  const bigAv = document.getElementById('profile-avatar-big');
+  if (u.photo_url) {
+    bigAv.innerHTML = `<img src="${u.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${initials}'">`;
+  } else {
+    bigAv.textContent = initials;
+  }
+
+  document.getElementById('profile-name').textContent = full || 'Telegram User';
+  document.getElementById('profile-handle').textContent = u.username ? '@' + u.username : 'No username set';
+  document.getElementById('profile-id').textContent = u.id;
+  document.getElementById('profile-lang').textContent = u.language_code ? u.language_code.toUpperCase() : '—';
+
+  // Stats from order history
+  const userOrders = orderHistory.filter(o => o.userId === String(u.id));
+  const totalSpent = userOrders.reduce((a, o) => a + (o.total||0), 0);
+  document.getElementById('profile-order-count').textContent = userOrders.length;
+  document.getElementById('profile-total-spent').textContent = fmt(totalSpent);
+
+  // Cart count
+  const cartCount = cart.reduce((a,i)=>a+i.qty,0);
+  document.getElementById('profile-cart-count').textContent = cartCount === 0 ? 'Empty' : `${cartCount} item${cartCount!==1?'s':''}`;
+
+  // Order history list
+  const ordList = document.getElementById('profile-orders-list');
+  if (userOrders.length === 0) {
+    ordList.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;padding:28px 16px;text-align:center">
+        <div style="font-size:38px;margin-bottom:10px">📦</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:5px">No orders yet</div>
+        <div style="font-size:12px;color:var(--gray)">Your order history will appear here</div>
+      </div>`;
+  } else {
+    ordList.innerHTML = [...userOrders].reverse().map(o => `
+      <div style="padding:14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="font-size:13px;font-weight:700">#${o.id}</div>
+          <div style="font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;
+            background:${o.method==='pickup'?'rgba(46,204,113,.12)':'rgba(245,166,35,.12)'};
+            color:${o.method==='pickup'?'#2ecc71':'var(--accent)'}">
+            ${o.methodIcon} ${o.methodName}
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:5px">${o.date} · ${o.itemCount} item${o.itemCount!==1?'s':''}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent)">${fmt(o.total)}</div>
+      </div>
+    `).join('');
+  }
+
+  setNav('profile');
+  showPage('profile');
+}
+
+
 function goSearch(){
   goShop();
   setTimeout(()=>{
@@ -875,7 +1087,7 @@ function showPage(p){
 }
 function setNav(p){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const m={shop:'nav-shop',cart:'nav-cart',info:'nav-info'};
+  const m={shop:'nav-shop',cart:'nav-cart',info:'nav-info',profile:'nav-profile'};
   if(m[p]) document.getElementById(m[p]).classList.add('active');
 }
 
