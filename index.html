@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Emartzon Sportswear</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="stylesheet" href="styles.css">
+
 </head>
 <body>
 
@@ -516,6 +516,8 @@
 // ═══════════════════════════════════════════════════
 const DEFAULT_CONFIG = {
   pin: "1234",
+  ownerTelegramId: "",   // SET THIS to your Telegram numeric ID after first login
+  adminIds: [],          // list of Telegram IDs that can access settings
   brandName1: "emart",
   brandName2: "zon",
   logoUrl: "",
@@ -587,6 +589,28 @@ function save(){ localStorage.setItem('emartzon_cfg', JSON.stringify(cfg)); }
 function saveOrders(){ localStorage.setItem('emartzon_orders', JSON.stringify(orderHistory)); }
 function fmt(n){ return cfg.currencyPos==='after' ? n.toLocaleString()+' '+cfg.currency : cfg.currency+' '+n.toLocaleString(); }
 function nextId(){ return Math.max(0,...cfg.products.map(p=>p.id))+1; }
+
+// ── ROLE HELPERS ──────────────────────────────────
+function myId(){ return tgUser ? String(tgUser.id) : null; }
+function isOwner(){
+  if (!tgUser) return false;
+  // Auto-claim ownership if no owner set yet (first run)
+  if (!cfg.ownerTelegramId) return true;
+  return String(tgUser.id) === String(cfg.ownerTelegramId);
+}
+function isAdmin(){
+  if (!tgUser) return false;
+  if (isOwner()) return true;
+  return (cfg.adminIds||[]).map(String).includes(String(tgUser.id));
+}
+function claimOwnership(){
+  // Called once when owner opens app and no owner is set
+  if (!cfg.ownerTelegramId && tgUser) {
+    cfg.ownerTelegramId = String(tgUser.id);
+    if (!cfg.adminIds) cfg.adminIds = [];
+    save();
+  }
+}
 
 // ── TELEGRAM USER STATE ───────────────────────────
 let tgUser = null; // populated after login
@@ -681,6 +705,9 @@ function enterApp() {
 }
 
 function bootApp() {
+  // Claim ownership if this is the very first run
+  claimOwnership();
+
   renderHeader();
   renderHero();
   renderCats();
@@ -1023,6 +1050,16 @@ function showProfile() {
     bigAv.textContent = initials;
   }
 
+  // Role badge
+  const roleBadge = document.getElementById('profile-role-badge');
+  if (isOwner()) {
+    roleBadge.innerHTML = `<span style="background:linear-gradient(90deg,#f5a623,#e8920f);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">👑 Owner</span>`;
+  } else if (isAdmin()) {
+    roleBadge.innerHTML = `<span style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">⚙️ Admin</span>`;
+  } else {
+    roleBadge.innerHTML = `<span style="background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#2ecc71;display:inline-block"></span>Member</span>`;
+  }
+
   document.getElementById('profile-name').textContent = full || 'Telegram User';
   document.getElementById('profile-handle').textContent = u.username ? '@' + u.username : 'No username set';
   document.getElementById('profile-id').textContent = u.id;
@@ -1064,9 +1101,74 @@ function showProfile() {
     `).join('');
   }
 
+  // Show/hide admin section
+  document.getElementById('profile-admin-section').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('profile-owner-section').style.display = isOwner() ? 'block' : 'none';
+
+  // Populate admin settings inline
+  if (isAdmin()) renderInlineAdminSettings();
+  if (isOwner()) renderManageAdmins();
+
   setNav('profile');
   showPage('profile');
 }
+
+// ── INLINE ADMIN SETTINGS (inside profile) ────────
+function renderInlineAdminSettings() {
+  const wrap = document.getElementById('inline-admin-tabs-content');
+  // tabs are already in HTML; just set default active
+}
+
+function switchProfileAdminTab(idx, el) {
+  document.querySelectorAll('.padm-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.padm-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('padm-panel-' + idx).classList.add('active');
+}
+
+// ── MANAGE ADMINS (owner only) ────────────────────
+function renderManageAdmins() {
+  const list = document.getElementById('admin-ids-list');
+  const ids = cfg.adminIds || [];
+  if (ids.length === 0) {
+    list.innerHTML = `<div style="padding:14px;text-align:center;font-size:12px;color:var(--gray)">No admins added yet</div>`;
+    return;
+  }
+  list.innerHTML = ids.map((id, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">${id}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">Admin #${i+1}</div>
+      </div>
+      <button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button>
+    </div>
+  `).join('');
+}
+
+function addAdmin() {
+  const inp = document.getElementById('new-admin-id-inp');
+  const val = inp.value.trim().replace(/\D/g,'');
+  if (!val) { showToast('Enter a valid Telegram ID'); return; }
+  if (val === String(cfg.ownerTelegramId)) { showToast("That's your own ID — you're already the owner"); return; }
+  if ((cfg.adminIds||[]).includes(val)) { showToast('Already an admin'); return; }
+  if (!cfg.adminIds) cfg.adminIds = [];
+  cfg.adminIds.push(val);
+  save();
+  inp.value = '';
+  renderManageAdmins();
+  showToast('Admin added! ✅');
+}
+
+function removeAdmin(id) {
+  cfg.adminIds = (cfg.adminIds||[]).filter(x => x !== id);
+  save();
+  renderManageAdmins();
+  showToast('Admin removed');
+}
+
+// Inline product quick-edit (admin panel inside profile)
+function padmOpenProd(idx){ openProdModal(idx); }
+function padmAddProd(){ openProdModal(-1); }
 
 
 function goSearch(){
@@ -1082,7 +1184,7 @@ function goShop(){ setNav('shop'); showPage('shop'); }
 function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
-  const hideHdr=['detail','cart','checkout','success','info','admin'].includes(p);
+  const hideHdr=['detail','cart','checkout','success','info','admin','profile'].includes(p);
   document.getElementById('main-hdr').style.display=hideHdr?'none':'flex';
 }
 function setNav(p){
