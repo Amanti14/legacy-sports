@@ -350,93 +350,226 @@
      PROFILE PAGE
 ════════════════════════════════ -->
 <div class="page" id="page-profile">
-  <div class="pg-hdr"><h2>👤 My Profile</h2></div>
+  <div class="pg-hdr" id="profile-pg-hdr">
+    <h2>👤 My Profile</h2>
+    <!-- role badge shown in header for admin/owner -->
+    <div id="profile-hdr-badge" style="margin-left:auto"></div>
+  </div>
   <div class="scroll2" id="profile-scroll">
 
-    <!-- Hero profile card -->
-    <div id="profile-hero-card" style="
-      margin:14px 14px 12px;
-      background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:22px 18px 18px;
-      position:relative;
-      overflow:hidden;
-    ">
-      <!-- accent glow -->
+    <!-- ── HERO CARD ── -->
+    <div style="margin:14px 14px 12px;background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:18px;padding:22px 18px 18px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(245,166,35,.1) 0%,transparent 70%);pointer-events:none"></div>
-      <!-- top accent bar -->
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),transparent)"></div>
-
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
-        <!-- Big avatar -->
-        <div id="profile-avatar-big" style="
-          width:72px;height:72px;border-radius:50%;
-          background:linear-gradient(135deg,var(--accent),var(--accent2));
-          display:flex;align-items:center;justify-content:center;
-          font-size:30px;font-weight:700;color:var(--bg);
-          flex-shrink:0;overflow:hidden;
-          border:3px solid rgba(245,166,35,.3);
-          box-shadow:0 4px 20px rgba(245,166,35,.2);
-        ">?</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+        <div id="profile-avatar-big" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--bg);flex-shrink:0;overflow:hidden;border:3px solid rgba(245,166,35,.3);box-shadow:0 4px 20px rgba(245,166,35,.2)">?</div>
         <div style="flex:1;min-width:0">
           <div id="profile-name" style="font-size:20px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-          <div id="profile-handle" style="font-size:13px;color:var(--accent);margin-bottom:6px">@—</div>
-          <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);border-radius:20px;padding:3px 10px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#2ecc71"></div>
-            <span style="font-size:11px;color:#2ecc71;font-weight:600">Logged in via Telegram</span>
-          </div>
+          <div id="profile-handle" style="font-size:13px;color:var(--accent);margin-bottom:8px">@—</div>
+          <div id="profile-role-badge"></div>
         </div>
       </div>
-
-      <!-- Info grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
           <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Telegram ID</div>
-          <div id="profile-id" style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">—</div>
+          <div id="profile-id" style="font-size:12px;font-weight:600;font-family:monospace;color:var(--light)">—</div>
         </div>
         <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
           <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Language</div>
           <div id="profile-lang" style="font-size:13px;font-weight:600;color:var(--light)">—</div>
         </div>
         <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
-          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Orders Placed</div>
+          <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Orders</div>
           <div id="profile-order-count" style="font-size:13px;font-weight:700;color:var(--accent)">0</div>
         </div>
         <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
           <div style="font-size:10px;color:var(--gray);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Total Spent</div>
-          <div id="profile-total-spent" style="font-size:13px;font-weight:700;color:var(--accent)">ETB 0</div>
+          <div id="profile-total-spent" style="font-size:13px;font-weight:700;color:var(--accent)">—</div>
         </div>
       </div>
     </div>
 
-    <!-- Account actions -->
+    <!-- ── QUICK ACTIONS ── -->
     <div style="margin:0 14px 12px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
-      <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Account</div>
-      <div class="profile-action-row" onclick="goShop()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border)">
+      <div style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Quick Actions</div>
+      <div class="profile-action-row" onclick="goShop()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)">
         <div style="font-size:20px;width:24px;text-align:center">🛍</div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:600">Continue Shopping</div><div style="font-size:11px;color:var(--gray)">Browse all jerseys</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">Continue Shopping</div><div style="font-size:11px;color:var(--gray)">Browse all jerseys</div></div>
         <div style="color:var(--gray);font-size:18px">›</div>
       </div>
-      <div class="profile-action-row" onclick="showCart()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border)">
+      <div class="profile-action-row" onclick="showCart()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)">
         <div style="font-size:20px;width:24px;text-align:center">🛒</div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:600">My Cart</div><div id="profile-cart-count" style="font-size:11px;color:var(--gray)">0 items</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">My Cart</div><div id="profile-cart-count" style="font-size:11px;color:var(--gray)">0 items</div></div>
         <div style="color:var(--gray);font-size:18px">›</div>
       </div>
-      <div class="profile-action-row" onclick="showInfo()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px">
+      <div class="profile-action-row" onclick="showInfo()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 14px">
         <div style="font-size:20px;width:24px;text-align:center">🏪</div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:600">Store Info</div><div style="font-size:11px;color:var(--gray)">Location, hours & contact</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">Store Info</div><div style="font-size:11px;color:var(--gray)">Location, hours & contact</div></div>
         <div style="color:var(--gray);font-size:18px">›</div>
       </div>
     </div>
 
-    <!-- Order history -->
+    <!-- ── ORDER HISTORY ── -->
     <div style="margin:0 14px 12px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
-      <div style="padding:12px 14px;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Order History</div>
+      <div style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Order History</div>
       <div id="profile-orders-list"></div>
     </div>
 
-    <!-- Telegram info note -->
+    <!-- ════════════════════════════════
+         ADMIN SETTINGS SECTION
+         (only visible to admins/owner)
+    ═════════════════════════════════ -->
+    <div id="profile-admin-section" style="display:none;margin:0 14px 12px">
+
+      <!-- Admin section header -->
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 0 10px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.5px;white-space:nowrap">⚙️ ADMIN SETTINGS</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Admin tab bar -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);border-radius:12px 12px 0 0;overflow:hidden;overflow-x:auto;scrollbar-width:none">
+        <div class="padm-tab active" onclick="switchProfileAdminTab(0,this)">Products</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(1,this)">Categories</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(2,this)">Shipping</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(3,this)">Store</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(4,this)">Theme</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(5,this)">Hero</div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+
+        <!-- PADM TAB 0: PRODUCTS -->
+        <div class="padm-panel active" id="padm-panel-0" style="padding:12px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px;line-height:1.5">Tap any product to edit its image, name, price, badge or description.</div>
+          <button class="btn-add" onclick="padmAddProd()" style="margin-bottom:10px">＋ Add New Product</button>
+          <div id="padm-products-list"></div>
+        </div>
+
+        <!-- PADM TAB 1: CATEGORIES -->
+        <div class="padm-panel" id="padm-panel-1" style="padding:12px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Edit category names and IDs shown in the shop filter bar.</div>
+          <div id="padm-cats-list"></div>
+          <button class="btn-add" onclick="padmAddCat()" style="margin-bottom:10px">＋ Add Category</button>
+          <div style="font-size:12px;font-weight:700;color:var(--light);margin-bottom:8px">Sizes</div>
+          <div class="sizes-edit" id="padm-sizes-edit"></div>
+          <div style="display:flex;gap:7px">
+            <input id="padm-new-size" style="flex:1;background:var(--card2);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:8px;font-size:13px;outline:none;font-family:var(--font)" placeholder="e.g. 3XL">
+            <button class="btn-save" onclick="padmAddSize()">Add</button>
+          </div>
+        </div>
+
+        <!-- PADM TAB 2: SHIPPING -->
+        <div class="padm-panel" id="padm-panel-2" style="padding:12px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Edit shipping methods, icons, descriptions and prices.</div>
+          <div id="padm-shipping-list"></div>
+          <button class="btn-add" onclick="padmAddShipping()">＋ Add Method</button>
+        </div>
+
+        <!-- PADM TAB 3: STORE INFO -->
+        <div class="padm-panel" id="padm-panel-3" style="padding:12px">
+          <div class="adm-field"><label>Store Name</label><input id="padm-store-name" type="text"></div>
+          <div class="adm-field"><label>Tagline</label><input id="padm-store-sub" type="text"></div>
+          <div class="adm-field"><label>Phone</label><input id="padm-phone" type="text"></div>
+          <div class="adm-field"><label>Email</label><input id="padm-email" type="text"></div>
+          <div class="adm-field"><label>Address</label><input id="padm-address" type="text"></div>
+          <div class="adm-field"><label>Hours</label><input id="padm-hours" type="text"></div>
+          <div class="adm-field"><label>About Text</label><textarea id="padm-about" rows="3"></textarea></div>
+          <button class="btn-save" onclick="padmSaveStore()" style="margin-bottom:12px;width:100%">Save Store Info</button>
+          <hr style="border:none;border-top:1px solid var(--border);margin-bottom:12px">
+          <div class="adm-field"><label>Logo Image URL</label><input id="padm-logo-url" type="url" placeholder="https://..."></div>
+          <div class="adm-field"><label>Logo Emoji (fallback)</label><input id="padm-logo-emoji" type="text" maxlength="4"></div>
+          <div class="adm-field"><label>Brand Name Part 1</label><input id="padm-brand1" type="text"></div>
+          <div class="adm-field"><label>Brand Name Part 2 (accent)</label><input id="padm-brand2" type="text"></div>
+          <button class="btn-save" onclick="padmSaveLogo()" style="width:100%">Save Logo</button>
+        </div>
+
+        <!-- PADM TAB 4: THEME -->
+        <div class="padm-panel" id="padm-panel-4" style="padding:12px">
+          <div class="adm-field"><label>Accent Color</label><div class="color-row"><input type="color" id="padm-clr-accent" oninput="liveColor('--accent',this.value)"><span id="padm-clr-accent-hex"></span></div></div>
+          <div class="adm-field"><label>Background</label><div class="color-row"><input type="color" id="padm-clr-bg" oninput="liveColor('--bg',this.value)"><span id="padm-clr-bg-hex"></span></div></div>
+          <div class="adm-field"><label>Card Color</label><div class="color-row"><input type="color" id="padm-clr-card" oninput="liveColor('--card',this.value)"><span id="padm-clr-card-hex"></span></div></div>
+          <div class="adm-field"><label>Header Color</label><div class="color-row"><input type="color" id="padm-clr-dark" oninput="liveColor('--dark',this.value)"><span id="padm-clr-dark-hex"></span></div></div>
+          <div class="adm-field"><label>Text Color</label><div class="color-row"><input type="color" id="padm-clr-white" oninput="liveColor('--white',this.value)"><span id="padm-clr-white-hex"></span></div></div>
+          <div class="adm-2col" style="margin-bottom:10px">
+            <div class="adm-field"><label>Currency</label><input id="padm-currency" type="text" maxlength="5"></div>
+            <div class="adm-field"><label>Position</label><select id="padm-cur-pos"><option value="before">Before (ETB 100)</option><option value="after">After (100 ETB)</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-save" onclick="padmSaveTheme()" style="flex:1">Save Theme</button>
+            <button class="btn-outline" onclick="padmResetTheme()">Reset</button>
+          </div>
+        </div>
+
+        <!-- PADM TAB 5: HERO BANNER -->
+        <div class="padm-panel" id="padm-panel-5" style="padding:12px">
+          <div class="adm-field"><label>Tag Pill</label><input id="padm-hero-tag" type="text"></div>
+          <div class="adm-field"><label>Headline Line 1</label><input id="padm-hero-h1a" type="text"></div>
+          <div class="adm-field"><label>Headline Line 2 (accent)</label><input id="padm-hero-h1b" type="text"></div>
+          <div class="adm-field"><label>Subtitle</label><input id="padm-hero-sub" type="text"></div>
+          <div class="adm-field"><label>Hero Image URL</label><input id="padm-hero-img" type="url" placeholder="https://..."></div>
+          <button class="btn-save" onclick="padmSaveHero()" style="width:100%">Save Hero</button>
+        </div>
+
+      </div><!-- end inner panels box -->
+    </div><!-- end profile-admin-section -->
+
+    <!-- ════════════════════════════════
+         OWNER: MANAGE ADMINS
+         (only visible to owner)
+    ═════════════════════════════════ -->
+    <div id="profile-owner-section" style="display:none;margin:0 14px 12px">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0 10px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <div style="font-size:11px;color:var(--orange, #f5a623);font-weight:700;letter-spacing:.5px;white-space:nowrap;color:var(--accent)">👑 OWNER CONTROLS</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px">
+        <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:700">Manage Admins</div>
+            <div style="font-size:11px;color:var(--gray);margin-top:2px">Give shop editing access to trusted accounts</div>
+          </div>
+        </div>
+
+        <!-- Owner ID display -->
+        <div style="padding:12px 14px;background:rgba(245,166,35,.06);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <div style="font-size:20px">👑</div>
+          <div>
+            <div style="font-size:12px;font-weight:700">You (Owner)</div>
+            <div id="owner-id-display" style="font-size:11px;font-family:monospace;color:var(--accent)">—</div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;color:var(--gray)">Full Access</div>
+        </div>
+
+        <!-- Admin list -->
+        <div id="admin-ids-list"></div>
+
+        <!-- Add admin -->
+        <div style="padding:12px 14px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--gray);margin-bottom:8px;line-height:1.5">Add a Telegram user ID. They must open the app after being added to get admin access.</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <input id="new-admin-id-inp" type="number" inputmode="numeric" placeholder="Telegram User ID (e.g. 123456789)" style="flex:1;background:var(--card2);border:1px solid var(--border);color:var(--white);padding:10px;border-radius:9px;font-size:13px;outline:none;font-family:monospace" onkeydown="if(event.key==='Enter')addAdmin()">
+            <button class="btn-save" onclick="addAdmin()">Add</button>
+          </div>
+          <div style="font-size:11px;color:var(--gray)">💡 To find a user's ID, ask them to open the app — their ID is shown on their profile card.</div>
+        </div>
+      </div>
+
+      <!-- Owner: Your ID copy card -->
+      <div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <div style="font-size:18px">🪪</div>
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--gray);margin-bottom:2px">Your Telegram ID (share with no one)</div>
+          <div id="owner-my-id-copy" style="font-size:14px;font-weight:700;font-family:monospace;color:var(--accent)">—</div>
+        </div>
+        <button onclick="copyOwnerId()" style="background:var(--card2);border:1px solid var(--border);color:var(--white);padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer">Copy</button>
+      </div>
+    </div>
+
+    <!-- Security note -->
     <div style="margin:0 14px 20px;background:rgba(35,157,219,.07);border:1px solid rgba(35,157,219,.2);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
       <div style="font-size:18px;flex-shrink:0">🔒</div>
       <div style="font-size:12px;color:var(--gray);line-height:1.6">Your identity is verified by Telegram. No password is stored. Next time you open this app, you'll be logged in automatically.</div>
@@ -1037,27 +1170,28 @@ function showInfo(){
 // ── PROFILE PAGE ──────────────────────────────────
 function showProfile() {
   if (!tgUser) { showToast('Not logged in'); return; }
-
   const u = tgUser;
   const full = [u.first_name, u.last_name].filter(Boolean).join(' ');
   const initials = ((u.first_name||'?')[0] + (u.last_name ? u.last_name[0] : '')).toUpperCase();
 
-  // Big avatar
+  // Avatar
   const bigAv = document.getElementById('profile-avatar-big');
   if (u.photo_url) {
     bigAv.innerHTML = `<img src="${u.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${initials}'">`;
-  } else {
-    bigAv.textContent = initials;
-  }
+  } else { bigAv.textContent = initials; }
 
   // Role badge
-  const roleBadge = document.getElementById('profile-role-badge');
+  const rb = document.getElementById('profile-role-badge');
+  const hb = document.getElementById('profile-hdr-badge');
   if (isOwner()) {
-    roleBadge.innerHTML = `<span style="background:linear-gradient(90deg,#f5a623,#e8920f);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">👑 Owner</span>`;
+    const b = `<span style="background:linear-gradient(90deg,#f5a623,#e8920f);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">👑 Owner</span>`;
+    rb.innerHTML = b; hb.innerHTML = b;
   } else if (isAdmin()) {
-    roleBadge.innerHTML = `<span style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">⚙️ Admin</span>`;
+    const b = `<span style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--accent);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">⚙️ Admin</span>`;
+    rb.innerHTML = b; hb.innerHTML = b;
   } else {
-    roleBadge.innerHTML = `<span style="background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#2ecc71;display:inline-block"></span>Member</span>`;
+    rb.innerHTML = `<span style="background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.25);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#2ecc71;display:inline-block"></span>Member</span>`;
+    hb.innerHTML = '';
   }
 
   document.getElementById('profile-name').textContent = full || 'Telegram User';
@@ -1065,110 +1199,258 @@ function showProfile() {
   document.getElementById('profile-id').textContent = u.id;
   document.getElementById('profile-lang').textContent = u.language_code ? u.language_code.toUpperCase() : '—';
 
-  // Stats from order history
   const userOrders = orderHistory.filter(o => o.userId === String(u.id));
   const totalSpent = userOrders.reduce((a, o) => a + (o.total||0), 0);
   document.getElementById('profile-order-count').textContent = userOrders.length;
   document.getElementById('profile-total-spent').textContent = fmt(totalSpent);
-
-  // Cart count
   const cartCount = cart.reduce((a,i)=>a+i.qty,0);
   document.getElementById('profile-cart-count').textContent = cartCount === 0 ? 'Empty' : `${cartCount} item${cartCount!==1?'s':''}`;
 
-  // Order history list
+  // Orders list
   const ordList = document.getElementById('profile-orders-list');
-  if (userOrders.length === 0) {
-    ordList.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;padding:28px 16px;text-align:center">
-        <div style="font-size:38px;margin-bottom:10px">📦</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:5px">No orders yet</div>
-        <div style="font-size:12px;color:var(--gray)">Your order history will appear here</div>
-      </div>`;
+  if (!userOrders.length) {
+    ordList.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;padding:28px 16px;text-align:center"><div style="font-size:38px;margin-bottom:10px">📦</div><div style="font-size:14px;font-weight:600;margin-bottom:5px">No orders yet</div><div style="font-size:12px;color:var(--gray)">Your order history will appear here</div></div>`;
   } else {
-    ordList.innerHTML = [...userOrders].reverse().map(o => `
-      <div style="padding:14px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+    ordList.innerHTML = [...userOrders].reverse().map(o=>`
+      <div style="padding:13px 14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
           <div style="font-size:13px;font-weight:700">#${o.id}</div>
-          <div style="font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;
-            background:${o.method==='pickup'?'rgba(46,204,113,.12)':'rgba(245,166,35,.12)'};
-            color:${o.method==='pickup'?'#2ecc71':'var(--accent)'}">
-            ${o.methodIcon} ${o.methodName}
-          </div>
+          <div style="font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;background:${o.method==='pickup'?'rgba(46,204,113,.12)':'rgba(245,166,35,.12)'};color:${o.method==='pickup'?'#2ecc71':'var(--accent)'}">${o.methodIcon} ${o.methodName}</div>
         </div>
-        <div style="font-size:12px;color:var(--gray);margin-bottom:5px">${o.date} · ${o.itemCount} item${o.itemCount!==1?'s':''}</div>
+        <div style="font-size:11px;color:var(--gray);margin-bottom:4px">${o.date} · ${o.itemCount} item${o.itemCount!==1?'s':''}</div>
         <div style="font-size:14px;font-weight:700;color:var(--accent)">${fmt(o.total)}</div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-  // Show/hide admin section
-  document.getElementById('profile-admin-section').style.display = isAdmin() ? 'block' : 'none';
-  document.getElementById('profile-owner-section').style.display = isOwner() ? 'block' : 'none';
+  // Show/hide role sections
+  const adminSec = document.getElementById('profile-admin-section');
+  const ownerSec = document.getElementById('profile-owner-section');
+  adminSec.style.display = isAdmin() ? 'block' : 'none';
+  ownerSec.style.display = isOwner() ? 'block' : 'none';
 
-  // Populate admin settings inline
-  if (isAdmin()) renderInlineAdminSettings();
-  if (isOwner()) renderManageAdmins();
+  if (isAdmin()) populatePadmForms();
+  if (isOwner()) {
+    renderManageAdmins();
+    const ownerIdEl = document.getElementById('owner-id-display');
+    const myIdEl = document.getElementById('owner-my-id-copy');
+    if (ownerIdEl) ownerIdEl.textContent = cfg.ownerTelegramId || String(u.id);
+    if (myIdEl) myIdEl.textContent = String(u.id);
+  }
 
   setNav('profile');
   showPage('profile');
 }
 
-// ── INLINE ADMIN SETTINGS (inside profile) ────────
-function renderInlineAdminSettings() {
-  const wrap = document.getElementById('inline-admin-tabs-content');
-  // tabs are already in HTML; just set default active
+// ── POPULATE INLINE ADMIN FORMS ───────────────────
+function populatePadmForms() {
+  padmRenderProducts();
+  padmRenderCats();
+  padmRenderSizes();
+  padmRenderShipping();
+  // Store tab
+  const fields = {
+    'padm-store-name': cfg.storeName, 'padm-store-sub': cfg.storeSub,
+    'padm-phone': cfg.phone, 'padm-email': cfg.email,
+    'padm-address': cfg.address, 'padm-hours': cfg.hours,
+    'padm-about': cfg.about, 'padm-logo-url': cfg.logoUrl,
+    'padm-logo-emoji': cfg.logoEmoji, 'padm-brand1': cfg.brandName1,
+    'padm-brand2': cfg.brandName2,
+  };
+  Object.entries(fields).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val||''; });
+  // Theme tab
+  const t = cfg.theme||DEFAULT_CONFIG.theme;
+  ['accent','bg','card','dark','white'].forEach(k=>{
+    const inp=document.getElementById('padm-clr-'+k);
+    const hex=document.getElementById('padm-clr-'+k+'-hex');
+    if(inp) inp.value=t['--'+k]||'';
+    if(hex) hex.textContent=t['--'+k]||'';
+  });
+  const cur=document.getElementById('padm-currency');
+  const curPos=document.getElementById('padm-cur-pos');
+  if(cur) cur.value=cfg.currency||'ETB';
+  if(curPos) curPos.value=cfg.currencyPos||'before';
+  // Hero tab
+  const h=cfg.hero;
+  [['padm-hero-tag',h.tag],['padm-hero-h1a',h.h1a],['padm-hero-h1b',h.h1b],['padm-hero-sub',h.sub],['padm-hero-img',h.imgUrl]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
 }
 
 function switchProfileAdminTab(idx, el) {
-  document.querySelectorAll('.padm-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  document.querySelectorAll('.padm-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('padm-panel-' + idx).classList.add('active');
+  document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('padm-panel-'+idx).classList.add('active');
+}
+
+// Products
+function padmRenderProducts() {
+  const list = document.getElementById('padm-products-list');
+  if (!list) return;
+  list.innerHTML = cfg.products.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer" onclick="padmOpenProd(${i})">
+      <div style="width:44px;height:44px;border-radius:8px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">
+        ${p.imgUrl ? `<img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.textContent='${p.emoji||'⚽'}'">` : p.emoji||'⚽'}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:11px;color:var(--gray)">${p.league}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent)">${fmt(p.price)}</div>
+      </div>
+      <div style="color:var(--gray);font-size:16px">›</div>
+    </div>
+  `).join('');
+}
+function padmOpenProd(idx) { openProdModal(idx); }
+function padmAddProd() { openProdModal(-1); }
+
+// Categories
+function padmRenderCats() {
+  const list = document.getElementById('padm-cats-list');
+  if (!list) return;
+  list.innerHTML = cfg.categories.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin-bottom:7px">
+      <span style="font-size:14px;color:var(--gray)">≡</span>
+      <input value="${c.label}" oninput="cfg.categories[${i}].label=this.value;save();renderCats();" style="flex:1;background:none;border:none;color:var(--white);font-size:13px;outline:none;font-family:var(--font)" placeholder="Category name">
+      <input value="${c.id}" oninput="updateCatId(${i},this.value)" style="width:90px;background:none;border:none;color:var(--accent);font-size:12px;outline:none;font-family:monospace" placeholder="id">
+      <button onclick="deleteCat(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:2px">✕</button>
+    </div>`).join('');
+}
+function padmAddCat() { adminAddCat(); setTimeout(padmRenderCats, 50); }
+
+// Sizes
+function padmRenderSizes() {
+  const wrap = document.getElementById('padm-sizes-edit');
+  if (!wrap) return;
+  wrap.innerHTML = cfg.sizes.map((s,i)=>`
+    <div class="sz-chip"><span>${s}</span><button onclick="cfg.sizes.splice(${i},1);save();padmRenderSizes();renderAdmSizes()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:14px;line-height:1;padding:0">✕</button></div>`).join('');
+}
+function padmAddSize() {
+  const inp = document.getElementById('padm-new-size');
+  const v = (inp?.value||'').trim().toUpperCase();
+  if (!v) return;
+  if (!cfg.sizes.includes(v)) cfg.sizes.push(v);
+  inp.value = ''; save(); padmRenderSizes(); renderAdmSizes(); showToast('Size added');
+}
+
+// Shipping
+function padmRenderShipping() {
+  const list = document.getElementById('padm-shipping-list');
+  if (!list) return;
+  list.innerHTML = cfg.shipping.map((s,i)=>`
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <input value="${s.icon}" oninput="cfg.shipping[${i}].icon=this.value;save()" style="width:36px;background:none;border:none;color:var(--white);font-size:20px;outline:none;text-align:center">
+        <input value="${s.name}" oninput="cfg.shipping[${i}].name=this.value;save()" style="flex:1;background:none;border:none;color:var(--white);font-size:13px;font-weight:600;outline:none;font-family:var(--font)">
+        <button onclick="cfg.shipping.splice(${i},1);save();padmRenderShipping();renderAdmShipping()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px">${cfg.shipping.length>1?'✕':''}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="adm-field"><label>Description</label><input value="${s.desc}" oninput="cfg.shipping[${i}].desc=this.value;save()"></div>
+        <div class="adm-field"><label>Price (0=Free)</label><input type="number" value="${s.price}" min="0" oninput="cfg.shipping[${i}].price=parseInt(this.value)||0;save()"></div>
+      </div>
+    </div>`).join('');
+}
+function padmAddShipping() {
+  cfg.shipping.push({id:'ship-'+Date.now(),icon:'📦',name:'New Method',desc:'Description',price:0});
+  save(); padmRenderShipping(); renderAdmShipping(); showToast('Method added');
+}
+
+// Store save functions
+function padmSaveStore() {
+  cfg.storeName=document.getElementById('padm-store-name').value;
+  cfg.storeSub=document.getElementById('padm-store-sub').value;
+  cfg.phone=document.getElementById('padm-phone').value;
+  cfg.email=document.getElementById('padm-email').value;
+  cfg.address=document.getElementById('padm-address').value;
+  cfg.hours=document.getElementById('padm-hours').value;
+  cfg.about=document.getElementById('padm-about').value;
+  save(); renderHeader(); renderPickupCard();
+  // Sync to main admin too
+  populateStoreForm();
+  showToast('Store info saved! ✅');
+}
+function padmSaveLogo() {
+  cfg.logoUrl=document.getElementById('padm-logo-url').value;
+  cfg.logoEmoji=document.getElementById('padm-logo-emoji').value||'⚽';
+  cfg.brandName1=document.getElementById('padm-brand1').value;
+  cfg.brandName2=document.getElementById('padm-brand2').value;
+  save(); renderHeader(); showToast('Logo saved! 🎨');
+}
+function padmSaveTheme() {
+  ['accent','bg','card','dark','white'].forEach(k=>{
+    const inp=document.getElementById('padm-clr-'+k);
+    if(inp) cfg.theme['--'+k]=inp.value;
+  });
+  cfg.currency=document.getElementById('padm-currency')?.value||'ETB';
+  cfg.currencyPos=document.getElementById('padm-cur-pos')?.value||'before';
+  save(); applyTheme(); renderHeader(); renderHero(); renderProducts('all');
+  showToast('Theme saved! 🎨');
+}
+function padmResetTheme() {
+  cfg.theme=deepClone(DEFAULT_CONFIG.theme);
+  save(); applyTheme(); populatePadmForms(); populateThemeForm(); showToast('Theme reset');
+}
+function padmSaveHero() {
+  cfg.hero={
+    tag: document.getElementById('padm-hero-tag')?.value||'',
+    h1a: document.getElementById('padm-hero-h1a')?.value||'',
+    h1b: document.getElementById('padm-hero-h1b')?.value||'',
+    sub: document.getElementById('padm-hero-sub')?.value||'',
+    imgUrl: document.getElementById('padm-hero-img')?.value||''
+  };
+  save(); renderHero(); populateHeroForm(); showToast('Hero saved! 🎉');
 }
 
 // ── MANAGE ADMINS (owner only) ────────────────────
 function renderManageAdmins() {
   const list = document.getElementById('admin-ids-list');
+  if (!list) return;
   const ids = cfg.adminIds || [];
-  if (ids.length === 0) {
-    list.innerHTML = `<div style="padding:14px;text-align:center;font-size:12px;color:var(--gray)">No admins added yet</div>`;
+  if (!ids.length) {
+    list.innerHTML = `<div style="padding:14px;text-align:center;font-size:12px;color:var(--gray)">No admins added yet. Add a Telegram ID below.</div>`;
     return;
   }
-  list.innerHTML = ids.map((id, i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)">
-      <div>
+  list.innerHTML = ids.map((id,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙️</div>
+      <div style="flex:1">
         <div style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">${id}</div>
-        <div style="font-size:11px;color:var(--gray);margin-top:2px">Admin #${i+1}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:1px">Admin #${i+1}</div>
       </div>
-      <button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button>
-    </div>
-  `).join('');
+      <button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 11px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button>
+    </div>`).join('');
 }
 
 function addAdmin() {
   const inp = document.getElementById('new-admin-id-inp');
-  const val = inp.value.trim().replace(/\D/g,'');
+  const val = (inp?.value||'').trim().replace(/\D/g,'');
   if (!val) { showToast('Enter a valid Telegram ID'); return; }
   if (val === String(cfg.ownerTelegramId)) { showToast("That's your own ID — you're already the owner"); return; }
   if ((cfg.adminIds||[]).includes(val)) { showToast('Already an admin'); return; }
   if (!cfg.adminIds) cfg.adminIds = [];
   cfg.adminIds.push(val);
   save();
-  inp.value = '';
+  if (inp) inp.value = '';
   renderManageAdmins();
   showToast('Admin added! ✅');
 }
 
 function removeAdmin(id) {
   cfg.adminIds = (cfg.adminIds||[]).filter(x => x !== id);
-  save();
-  renderManageAdmins();
-  showToast('Admin removed');
+  save(); renderManageAdmins(); showToast('Admin removed');
 }
 
-// Inline product quick-edit (admin panel inside profile)
+function copyOwnerId() {
+  const id = String(tgUser?.id || '');
+  if (navigator.clipboard) navigator.clipboard.writeText(id).then(()=>showToast('ID copied! 📋'));
+  else showToast(id);
+}
+
+// Keep old inline stubs working
 function padmOpenProd(idx){ openProdModal(idx); }
 function padmAddProd(){ openProdModal(-1); }
+
+// Override openProdModal save to also refresh padm list
+const _origSaveProdModal = typeof saveProdModal !== 'undefined' ? saveProdModal : null;
+
 
 
 function goSearch(){
@@ -1346,7 +1628,9 @@ function saveProdModal(){
   };
   if(editingProdIdx===-1) cfg.products.push(p);
   else cfg.products[editingProdIdx]=p;
-  save(); closeProdModal(); renderAdmProducts(); renderProducts('all'); showToast('Product saved! ✅');
+  save(); closeProdModal(); renderAdmProducts(); renderProducts('all');
+  if (isAdmin()) padmRenderProducts();
+  showToast('Product saved! ✅');
 }
 function deleteProdModal(){
   if(!confirm('Delete this product?')) return;
