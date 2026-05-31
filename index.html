@@ -102,13 +102,19 @@
       <div class="hero-tag" id="hero-tag">⚽ New Season 2024/25</div>
       <h1 id="hero-title">Official<br><span>Football Jerseys</span></h1>
       <p id="hero-subtitle">Authentic kits from top leagues worldwide</p>
-      <button class="hero-btn" onclick="document.getElementById('products-grid').scrollIntoView({behavior:'smooth'})">Shop Now →</button>
+      <button class="hero-btn" onclick="document.getElementById('cats-bar').scrollIntoView({behavior:'smooth'})">Shop Now →</button>
       <div id="hero-img-container"></div>
     </div>
 
-    <div class="sec-title">Categories</div>
+    <!-- League filter tabs -->
+    <div class="sec-title" id="shop-sec-title">Leagues</div>
     <div class="cats" id="cats-bar"></div>
-    <div class="products" id="products-grid"></div>
+
+    <!-- Breadcrumb trail -->
+    <div id="shop-breadcrumb" style="display:none;padding:0 14px 10px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"></div>
+
+    <!-- Dynamic grid -->
+    <div id="products-grid"></div>
     <div style="height:20px"></div>
   </div>
 </div>
@@ -118,7 +124,7 @@
 ════════════════════════════════ -->
 <div class="page" id="page-detail">
   <div class="pg-hdr">
-    <button class="back-btn" onclick="goShop()">← Back</button>
+    <button class="back-btn" id="det-back-btn" onclick="detGoBack()">← Back</button>
     <h2 id="det-title">Product</h2>
   </div>
   <div class="scroll2" id="det-content"></div>
@@ -649,8 +655,8 @@
 // ═══════════════════════════════════════════════════
 const DEFAULT_CONFIG = {
   pin: "1234",
-  ownerTelegramId: "",   // SET THIS to your Telegram numeric ID after first login
-  adminIds: [],          // list of Telegram IDs that can access settings
+  ownerTelegramId: "",
+  adminIds: [],
   brandName1: "emart",
   brandName2: "zon",
   logoUrl: "",
@@ -680,30 +686,244 @@ const DEFAULT_CONFIG = {
     "--border": "#2a2a2a"
   },
   sizes: ["XS","S","M","L","XL","XXL"],
-  categories: [
-    { id:"premier", label:"Premier League" },
-    { id:"laliga", label:"La Liga" },
-    { id:"ucl", label:"UCL" },
-    { id:"national", label:"National Teams" },
-    { id:"serie", label:"Serie A" },
+
+  // ── LEAGUES ──────────────────────────────────────
+  // Each league has teams; each team has products (kits + accessories)
+  leagues: [
+    {
+      id: "premier", label: "Premier League", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      teams: [
+        {
+          id: "mancity", name: "Manchester City", emoji: "🔵", crest: "",
+          products: [
+            { id:101, kitType:"Home Kit",    emoji:"🔵", imgUrl:"", price:1850, badge:"new",  desc:"Official Man City 2024/25 home jersey. Sky blue with white trim." },
+            { id:102, kitType:"Away Kit",    emoji:"⚫", imgUrl:"", price:1800, badge:"",    desc:"Man City away kit. Dark navy with gold details." },
+            { id:103, kitType:"Third Kit",   emoji:"🟠", imgUrl:"", price:1800, badge:"",    desc:"Man City third kit. Bold orange design." },
+            { id:104, kitType:"Goalkeeper",  emoji:"🟡", imgUrl:"", price:1750, badge:"",    desc:"Man City GK jersey 2024/25." },
+            { id:105, kitType:"Training Top",emoji:"🩵", imgUrl:"", price:1200, badge:"",    desc:"Official Man City training top." },
+            { id:106, kitType:"Shorts",      emoji:"👖", imgUrl:"", price:750,  badge:"",    desc:"Matching Man City home shorts." },
+          ]
+        },
+        {
+          id: "arsenal", name: "Arsenal", emoji: "🔴", crest: "",
+          products: [
+            { id:111, kitType:"Home Kit",    emoji:"🔴", imgUrl:"", price:1850, badge:"",    desc:"Arsenal 2024/25 home jersey. Classic red with white sleeves." },
+            { id:112, kitType:"Away Kit",    emoji:"🟡", imgUrl:"", price:1800, badge:"new", desc:"Arsenal away kit. Yellow with navy details." },
+            { id:113, kitType:"Third Kit",   emoji:"⚫", imgUrl:"", price:1800, badge:"",    desc:"Arsenal third kit. Dark navy." },
+            { id:114, kitType:"Goalkeeper",  emoji:"🟢", imgUrl:"", price:1750, badge:"",    desc:"Arsenal GK jersey 2024/25." },
+            { id:115, kitType:"Training Top",emoji:"🔴", imgUrl:"", price:1200, badge:"",    desc:"Official Arsenal training top." },
+            { id:116, kitType:"Shorts",      emoji:"⚪", imgUrl:"", price:750,  badge:"",    desc:"Matching Arsenal home shorts." },
+          ]
+        },
+        {
+          id: "chelsea", name: "Chelsea", emoji: "💙", crest: "",
+          products: [
+            { id:121, kitType:"Home Kit",    emoji:"💙", imgUrl:"", price:1850, badge:"",    desc:"Chelsea 2024/25 home. Royal blue with white trim." },
+            { id:122, kitType:"Away Kit",    emoji:"🟡", imgUrl:"", price:1800, badge:"",    desc:"Chelsea away kit. Bright yellow design." },
+            { id:123, kitType:"Third Kit",   emoji:"⚫", imgUrl:"", price:1800, badge:"",    desc:"Chelsea third kit in dark grey." },
+            { id:124, kitType:"Goalkeeper",  emoji:"🟢", imgUrl:"", price:1750, badge:"",    desc:"Chelsea GK jersey 2024/25." },
+            { id:125, kitType:"Training Top",emoji:"💙", imgUrl:"", price:1200, badge:"",    desc:"Official Chelsea training top." },
+          ]
+        },
+        {
+          id: "liverpool", name: "Liverpool", emoji: "❤️", crest: "",
+          products: [
+            { id:131, kitType:"Home Kit",    emoji:"❤️", imgUrl:"", price:1850, badge:"hot", desc:"Liverpool 2024/25 home. Classic all-red." },
+            { id:132, kitType:"Away Kit",    emoji:"🤍", imgUrl:"", price:1800, badge:"",    desc:"Liverpool away kit. White with red details." },
+            { id:133, kitType:"Third Kit",   emoji:"🟢", imgUrl:"", price:1800, badge:"",    desc:"Liverpool third kit. Teal green." },
+            { id:134, kitType:"Goalkeeper",  emoji:"🟡", imgUrl:"", price:1750, badge:"",    desc:"Liverpool GK jersey 2024/25." },
+            { id:135, kitType:"Training Top",emoji:"❤️", imgUrl:"", price:1200, badge:"",    desc:"Official Liverpool training top." },
+          ]
+        },
+        {
+          id: "manutd", name: "Man United", emoji: "🔴", crest: "",
+          products: [
+            { id:141, kitType:"Home Kit",    emoji:"🔴", imgUrl:"", price:1850, badge:"",    desc:"Man United 2024/25 home. Classic red with black collar." },
+            { id:142, kitType:"Away Kit",    emoji:"⚫", imgUrl:"", price:1800, badge:"",    desc:"Man United away kit. Black with red accents." },
+            { id:143, kitType:"Third Kit",   emoji:"💙", imgUrl:"", price:1800, badge:"",    desc:"Man United third kit. Blue design." },
+            { id:144, kitType:"Training Top",emoji:"🔴", imgUrl:"", price:1200, badge:"",    desc:"Official Man United training top." },
+          ]
+        },
+        {
+          id: "spurs", name: "Tottenham", emoji: "⚪", crest: "",
+          products: [
+            { id:151, kitType:"Home Kit",    emoji:"⚪", imgUrl:"", price:1800, badge:"",    desc:"Spurs 2024/25 home. White with navy collar." },
+            { id:152, kitType:"Away Kit",    emoji:"🟡", imgUrl:"", price:1750, badge:"",    desc:"Spurs away kit in yellow." },
+            { id:153, kitType:"Third Kit",   emoji:"💜", imgUrl:"", price:1750, badge:"",    desc:"Spurs third kit. Purple design." },
+          ]
+        },
+      ]
+    },
+    {
+      id: "laliga", label: "La Liga", emoji: "🇪🇸",
+      teams: [
+        {
+          id: "realmadrid", name: "Real Madrid", emoji: "⚪", crest: "",
+          products: [
+            { id:201, kitType:"Home Kit",    emoji:"⚪", imgUrl:"", price:1950, badge:"hot", desc:"Real Madrid 2024/25 home. Iconic all-white." },
+            { id:202, kitType:"Away Kit",    emoji:"💜", imgUrl:"", price:1900, badge:"",    desc:"Real Madrid away kit. Purple design." },
+            { id:203, kitType:"Third Kit",   emoji:"⚫", imgUrl:"", price:1900, badge:"",    desc:"Real Madrid third kit. Black with gold." },
+            { id:204, kitType:"Goalkeeper",  emoji:"🟢", imgUrl:"", price:1850, badge:"",    desc:"Real Madrid GK jersey." },
+            { id:205, kitType:"Training Top",emoji:"⚪", imgUrl:"", price:1300, badge:"",    desc:"Official Real Madrid training top." },
+            { id:206, kitType:"Shorts",      emoji:"⚪", imgUrl:"", price:800,  badge:"",    desc:"Real Madrid home shorts." },
+          ]
+        },
+        {
+          id: "barcelona", name: "Barcelona", emoji: "🔵", crest: "",
+          products: [
+            { id:211, kitType:"Home Kit",    emoji:"🔵", imgUrl:"", price:1900, badge:"",    desc:"Barcelona 2024/25 home. Classic blaugrana stripes." },
+            { id:212, kitType:"Away Kit",    emoji:"🟡", imgUrl:"", price:1850, badge:"new", desc:"Barcelona away kit. Yellow with dark details." },
+            { id:213, kitType:"Third Kit",   emoji:"⚫", imgUrl:"", price:1850, badge:"",    desc:"Barcelona third kit. Dark design." },
+            { id:214, kitType:"Goalkeeper",  emoji:"🟠", imgUrl:"", price:1800, badge:"",    desc:"Barcelona GK jersey." },
+            { id:215, kitType:"Training Top",emoji:"🔵", imgUrl:"", price:1300, badge:"",    desc:"Official Barcelona training top." },
+          ]
+        },
+        {
+          id: "atletico", name: "Atlético Madrid", emoji: "🔴", crest: "",
+          products: [
+            { id:221, kitType:"Home Kit",    emoji:"🔴", imgUrl:"", price:1800, badge:"",    desc:"Atlético Madrid 2024/25 home. Red and white stripes." },
+            { id:222, kitType:"Away Kit",    emoji:"⚫", imgUrl:"", price:1750, badge:"",    desc:"Atlético Madrid away. Dark design." },
+            { id:223, kitType:"Third Kit",   emoji:"🔵", imgUrl:"", price:1750, badge:"",    desc:"Atlético Madrid third kit." },
+          ]
+        },
+        {
+          id: "sevilla", name: "Sevilla", emoji: "⚪", crest: "",
+          products: [
+            { id:231, kitType:"Home Kit",    emoji:"⚪", imgUrl:"", price:1700, badge:"",    desc:"Sevilla 2024/25 home. Classic all-white." },
+            { id:232, kitType:"Away Kit",    emoji:"⚫", imgUrl:"", price:1650, badge:"",    desc:"Sevilla away kit." },
+          ]
+        },
+      ]
+    },
+    {
+      id: "serie", label: "Serie A", emoji: "🇮🇹",
+      teams: [
+        {
+          id: "juventus", name: "Juventus", emoji: "⚫", crest: "",
+          products: [
+            { id:301, kitType:"Home Kit",    emoji:"⚫", imgUrl:"", price:1750, badge:"sale",desc:"Juventus 2024/25 home. Iconic black and white stripes." },
+            { id:302, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1700, badge:"",    desc:"Juventus away kit. White design." },
+            { id:303, kitType:"Third Kit",   emoji:"🟡", imgUrl:"", price:1700, badge:"",    desc:"Juventus third kit. Yellow accent." },
+            { id:304, kitType:"Training Top",emoji:"⚫", imgUrl:"", price:1200, badge:"",    desc:"Official Juventus training top." },
+          ]
+        },
+        {
+          id: "acmilan", name: "AC Milan", emoji: "🔴", crest: "",
+          products: [
+            { id:311, kitType:"Home Kit",    emoji:"🔴", imgUrl:"", price:1750, badge:"",    desc:"AC Milan 2024/25 home. Red and black stripes." },
+            { id:312, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1700, badge:"",    desc:"AC Milan away kit. White." },
+            { id:313, kitType:"Third Kit",   emoji:"⚫", imgUrl:"", price:1700, badge:"new", desc:"AC Milan third kit. All black." },
+          ]
+        },
+        {
+          id: "inter", name: "Inter Milan", emoji: "💙", crest: "",
+          products: [
+            { id:321, kitType:"Home Kit",    emoji:"💙", imgUrl:"", price:1750, badge:"",    desc:"Inter Milan 2024/25 home. Blue and black stripes." },
+            { id:322, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1700, badge:"",    desc:"Inter Milan away kit." },
+            { id:323, kitType:"Third Kit",   emoji:"🟢", imgUrl:"", price:1700, badge:"",    desc:"Inter Milan third kit." },
+          ]
+        },
+        {
+          id: "napoli", name: "Napoli", emoji: "💙", crest: "",
+          products: [
+            { id:331, kitType:"Home Kit",    emoji:"💙", imgUrl:"", price:1700, badge:"",    desc:"Napoli 2024/25 home. Azure blue." },
+            { id:332, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1650, badge:"",    desc:"Napoli away kit. White design." },
+          ]
+        },
+      ]
+    },
+    {
+      id: "ucl", label: "Champions League", emoji: "🏆",
+      teams: [
+        {
+          id: "psg", name: "PSG", emoji: "🔵", crest: "",
+          products: [
+            { id:401, kitType:"Home Kit",       emoji:"🔵", imgUrl:"", price:2000, badge:"new",  desc:"PSG 2024/25 home. Navy with red and white trim." },
+            { id:402, kitType:"Away Kit",        emoji:"⚪", imgUrl:"", price:1950, badge:"",    desc:"PSG away kit. White design." },
+            { id:403, kitType:"UCL Edition",     emoji:"🏆", imgUrl:"", price:2100, badge:"hot", desc:"PSG Champions League special edition." },
+            { id:404, kitType:"Training Top",    emoji:"🔵", imgUrl:"", price:1400, badge:"",    desc:"Official PSG UCL training top." },
+          ]
+        },
+        {
+          id: "dortmund", name: "Borussia Dortmund", emoji: "🟡", crest: "",
+          products: [
+            { id:411, kitType:"Home Kit",    emoji:"🟡", imgUrl:"", price:1850, badge:"",    desc:"Dortmund 2024/25 home. Yellow and black." },
+            { id:412, kitType:"Away Kit",    emoji:"⚫", imgUrl:"", price:1800, badge:"",    desc:"Dortmund away kit. Black." },
+            { id:413, kitType:"UCL Edition", emoji:"🏆", imgUrl:"", price:1950, badge:"new", desc:"Dortmund UCL special edition." },
+          ]
+        },
+        {
+          id: "bayern", name: "Bayern Munich", emoji: "🔴", crest: "",
+          products: [
+            { id:421, kitType:"Home Kit",    emoji:"🔴", imgUrl:"", price:1900, badge:"",    desc:"Bayern Munich 2024/25 home. Classic red." },
+            { id:422, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1850, badge:"",    desc:"Bayern away kit. White." },
+            { id:423, kitType:"UCL Edition", emoji:"🏆", imgUrl:"", price:2000, badge:"",    desc:"Bayern UCL special edition." },
+          ]
+        },
+      ]
+    },
+    {
+      id: "national", label: "National Teams", emoji: "🌍",
+      teams: [
+        {
+          id: "ethiopia", name: "Ethiopia 🇪🇹", emoji: "🟢", crest: "",
+          products: [
+            { id:501, kitType:"Home Kit",    emoji:"🟢", imgUrl:"", price:1450, badge:"local",desc:"Ethiopia Walia Ibex 2024. Green with yellow and red trim." },
+            { id:502, kitType:"Away Kit",    emoji:"🟡", imgUrl:"", price:1400, badge:"",    desc:"Ethiopia away kit. Yellow design." },
+            { id:503, kitType:"Training Top",emoji:"🟢", imgUrl:"", price:1000, badge:"",    desc:"Official Ethiopia national team training top." },
+          ]
+        },
+        {
+          id: "brazil", name: "Brazil 🇧🇷", emoji: "🟡", crest: "",
+          products: [
+            { id:511, kitType:"Home Kit",    emoji:"🟡", imgUrl:"", price:1750, badge:"",    desc:"Brazil 2024. Iconic yellow and green." },
+            { id:512, kitType:"Away Kit",    emoji:"💙", imgUrl:"", price:1700, badge:"",    desc:"Brazil away kit. Blue design." },
+            { id:513, kitType:"Third Kit",   emoji:"⚪", imgUrl:"", price:1700, badge:"",    desc:"Brazil third kit. White." },
+          ]
+        },
+        {
+          id: "france", name: "France 🇫🇷", emoji: "💙", crest: "",
+          products: [
+            { id:521, kitType:"Home Kit",    emoji:"💙", imgUrl:"", price:1750, badge:"",    desc:"France 2024 home. Dark blue." },
+            { id:522, kitType:"Away Kit",    emoji:"⚪", imgUrl:"", price:1700, badge:"new", desc:"France away kit. White." },
+          ]
+        },
+        {
+          id: "argentina", name: "Argentina 🇦🇷", emoji: "🩵", crest: "",
+          products: [
+            { id:531, kitType:"Home Kit",    emoji:"🩵", imgUrl:"", price:1800, badge:"hot", desc:"Argentina 2024 home. Blue and white stripes." },
+            { id:532, kitType:"Away Kit",    emoji:"💜", imgUrl:"", price:1750, badge:"",    desc:"Argentina away kit." },
+          ]
+        },
+        {
+          id: "england", name: "England 🏴󠁧󠁢󠁥󠁮󠁧󠁿", emoji: "⚪", crest: "",
+          products: [
+            { id:541, kitType:"Home Kit",    emoji:"⚪", imgUrl:"", price:1750, badge:"",    desc:"England 2024 home. White with red cross trim." },
+            { id:542, kitType:"Away Kit",    emoji:"🔵", imgUrl:"", price:1700, badge:"",    desc:"England away kit. Blue." },
+          ]
+        },
+      ]
+    },
   ],
+
+  // Legacy flat products kept for admin modal compatibility (auto-derived from leagues)
+  get products() {
+    const all = [];
+    (this.leagues||[]).forEach(lg => {
+      (lg.teams||[]).forEach(team => {
+        (team.products||[]).forEach(p => {
+          all.push({ ...p, teamId: team.id, teamName: team.name, leagueId: lg.id, leagueName: lg.label, cat: lg.id, league: lg.label });
+        });
+      });
+    });
+    return all;
+  },
+
   shipping: [
     { id:"delivery", icon:"🚚", name:"Home Delivery", desc:"3–5 business days", price:80 },
     { id:"pickup",   icon:"🏪", name:"Pick from Store", desc:"Ready in 1–2 hours · Addis Ababa", price:0 },
     { id:"express",  icon:"⚡", name:"Express Delivery", desc:"Same day delivery", price:180 },
   ],
-  products: [
-    { id:1, name:"Manchester City Home Kit", league:"Premier League", cat:"premier", emoji:"🔵", imgUrl:"", price:1850, badge:"new",  desc:"Official 2024/25 home jersey. Dry-fit fabric, official club badge." },
-    { id:2, name:"Arsenal Away Jersey",      league:"Premier League", cat:"premier", emoji:"⚪", imgUrl:"", price:1750, badge:"",     desc:"Official Arsenal away kit 2024/25. Lightweight performance fabric." },
-    { id:3, name:"Real Madrid Home",         league:"La Liga",        cat:"laliga",  emoji:"⚽", imgUrl:"", price:1950, badge:"hot",  desc:"The iconic all-white Real Madrid home jersey." },
-    { id:4, name:"Barcelona Third Kit",      league:"La Liga",        cat:"laliga",  emoji:"🔴", imgUrl:"", price:1850, badge:"",     desc:"Barcelona's stunning third kit. Moisture-wicking technology." },
-    { id:5, name:"Ethiopia National Team",   league:"National",       cat:"national",emoji:"🟢", imgUrl:"", price:1450, badge:"local",desc:"Support the Walia Ibex! Official Ethiopian national team jersey." },
-    { id:6, name:"Brazil 2024 Away",         league:"National",       cat:"national",emoji:"🟡", imgUrl:"", price:1650, badge:"",     desc:"Brazil's away kit. Authentic CBF badge, breathable mesh panels." },
-    { id:7, name:"PSG UCL Edition",          league:"Champions League",cat:"ucl",    emoji:"🔷", imgUrl:"", price:2100, badge:"new",  desc:"PSG's exclusive Champions League edition. Limited print." },
-    { id:8, name:"AC Milan Home 24/25",      league:"Serie A",        cat:"serie",   emoji:"🔴", imgUrl:"", price:1700, badge:"",     desc:"The iconic rossoneri stripes. Authentic Puma construction." },
-    { id:9, name:"Chelsea Home Kit",         league:"Premier League", cat:"premier", emoji:"💙", imgUrl:"", price:1800, badge:"",     desc:"Chelsea 2024/25 home jersey. Nike Dri-FIT ADV technology." },
-    { id:10,name:"Juventus Home Jersey",     league:"Serie A",        cat:"serie",   emoji:"⚫", imgUrl:"", price:1750, badge:"sale", desc:"Iconic black and white stripes. Authentic Adidas performance fabric." },
-  ]
 };
 
 // ── STATE ──────────────────────────────────────────
@@ -844,7 +1064,9 @@ function bootApp() {
   renderHeader();
   renderHero();
   renderCats();
-  renderProducts('all');
+  renderShopGrid();
+  updateBreadcrumb();
+  updateShopTitle();
   renderShipOpts();
   renderPickupCard();
   populateAdminForms();
@@ -939,63 +1161,188 @@ function renderHero(){
     : '';
 }
 
-// ── CATEGORIES ────────────────────────────────────
-function renderCats(active='all'){
+// ── SHOP NAV STATE ────────────────────────────────
+let shopState = { leagueId: 'all', teamId: null, kitFilter: 'all' };
+
+// ── CATEGORIES (league tabs) ───────────────────────
+function renderCats() {
   const bar = document.getElementById('cats-bar');
-  bar.innerHTML = `<div class="cat-btn active" onclick="filterCat('all',this)">All Jerseys</div>`
-    + cfg.categories.map(c=>`<div class="cat-btn" onclick="filterCat('${c.id}',this)">${c.label}</div>`).join('');
-  if(active!=='all'){
-    bar.querySelectorAll('.cat-btn').forEach(b=>{
-      b.classList.toggle('active', b.textContent===(cfg.categories.find(c=>c.id===active)?.label||''));
-    });
-  }
-}
-function filterCat(cat,el){
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderProducts(cat);
+  const leagues = cfg.leagues || [];
+  bar.innerHTML = `<div class="cat-btn active" onclick="filterLeague('all',this)">All Teams</div>`
+    + leagues.map(l => `<div class="cat-btn" onclick="filterLeague('${l.id}',this)">${l.emoji} ${l.label}</div>`).join('');
 }
 
-// ── PRODUCTS ──────────────────────────────────────
-function renderProducts(cat='all', query=''){
-  const grid = document.getElementById('products-grid');
-  let list = cat==='all' ? cfg.products : cfg.products.filter(p=>p.cat===cat);
-  if(query) list = list.filter(p=>p.name.toLowerCase().includes(query.toLowerCase())||p.league.toLowerCase().includes(query.toLowerCase()));
-  if(!list.length){
-    grid.innerHTML=`<div style="grid-column:span 2;text-align:center;padding:30px 0;color:var(--gray);font-size:13px">No products found</div>`;
-    return;
+function filterLeague(leagueId, el) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  shopState = { leagueId, teamId: null, kitFilter: 'all' };
+  renderShopGrid();
+  updateBreadcrumb();
+  updateShopTitle();
+}
+
+function updateShopTitle() {
+  const el = document.getElementById('shop-sec-title');
+  if (!el) return;
+  const st = shopState;
+  if (st.teamId) {
+    const team = findTeam(st.leagueId, st.teamId);
+    el.textContent = team ? team.name : 'Products';
+  } else if (st.leagueId !== 'all') {
+    const lg = (cfg.leagues||[]).find(l => l.id === st.leagueId);
+    el.textContent = lg ? `${lg.emoji} ${lg.label} — Teams` : 'Teams';
+  } else {
+    el.textContent = 'All Teams';
   }
-  grid.innerHTML = list.map(p=>`
-    <div class="prod-card" onclick="showDetail(${p.id})">
-      ${p.badge ? `<div class="badge ${p.badge}">${p.badge.toUpperCase()}</div>` : ''}
-      <div class="prod-img-wrap">
-        ${p.imgUrl ? `<img src="${p.imgUrl}" alt="${p.name}" onerror="this.parentNode.innerHTML='<div class=prod-emoji>${p.emoji||'⚽'}</div>'">` : `<div class="prod-emoji">${p.emoji||'⚽'}</div>`}
-      </div>
-      <div class="prod-info">
-        <div class="prod-league">${p.league}</div>
-        <div class="prod-name">${p.name}</div>
-        <div class="prod-foot">
-          <div class="prod-price">${fmt(p.price)}</div>
-          <button class="add-btn" onclick="event.stopPropagation();quickAdd(${p.id})">+</button>
+}
+
+function updateBreadcrumb() {
+  const bc = document.getElementById('shop-breadcrumb');
+  if (!bc) return;
+  const st = shopState;
+  const parts = [];
+  parts.push(`<span class="bc-item" onclick="filterLeague('all',document.querySelector('.cat-btn'))">🏠 All</span>`);
+  if (st.leagueId !== 'all') {
+    const lg = (cfg.leagues||[]).find(l => l.id === st.leagueId);
+    if (lg) {
+      parts.push(`<span class="bc-sep">›</span>`);
+      if (st.teamId) {
+        parts.push(`<span class="bc-item" onclick="backToLeague()">${lg.emoji} ${lg.label}</span>`);
+        const team = findTeam(st.leagueId, st.teamId);
+        if (team) { parts.push(`<span class="bc-sep">›</span><span class="bc-item active">${team.name}</span>`); }
+      } else {
+        parts.push(`<span class="bc-item active">${lg.emoji} ${lg.label}</span>`);
+      }
+    }
+  }
+  const show = st.leagueId !== 'all' || !!st.teamId;
+  bc.style.display = show ? 'flex' : 'none';
+  bc.innerHTML = parts.join('');
+}
+
+function backToLeague() {
+  shopState.teamId = null; shopState.kitFilter = 'all';
+  renderShopGrid(); updateBreadcrumb(); updateShopTitle();
+}
+
+// ── MAIN SHOP GRID ────────────────────────────────
+function renderShopGrid(query = '') {
+  const st = shopState;
+  const grid = document.getElementById('products-grid');
+
+  if (st.teamId) {
+    // TEAM VIEW: kits + accessories
+    const team = findTeam(st.leagueId, st.teamId);
+    const league = (cfg.leagues||[]).find(l => l.id === st.leagueId);
+    if (!team) { grid.innerHTML = ''; return; }
+    let items = team.products || [];
+    if (st.kitFilter !== 'all') items = items.filter(p => p.kitType === st.kitFilter);
+    if (query) items = items.filter(p => p.kitType.toLowerCase().includes(query.toLowerCase()) || (p.desc||'').toLowerCase().includes(query.toLowerCase()));
+    const allTypes = [...new Set((team.products||[]).map(p => p.kitType))];
+    const chipsHtml = `<div class="kit-type-tabs">
+      <div class="kit-chip ${st.kitFilter==='all'?'active':''}" onclick="filterKitType('all')">All</div>
+      ${allTypes.map(t=>`<div class="kit-chip ${st.kitFilter===t?'active':''}" onclick="filterKitType(\`${t}\`)">${kitTypeIcon(t)} ${t}</div>`).join('')}
+    </div>`;
+    const teamHeader = `
+      <div class="kits-header">
+        <div class="kits-team-logo">${team.crest?`<img src="${team.crest}" onerror="this.parentNode.textContent='${team.emoji}'">`:team.emoji}</div>
+        <div><div class="kits-team-name">${team.name}</div><div class="kits-league">${league?.label||''}</div></div>
+      </div>${chipsHtml}`;
+    if (!items.length) { grid.innerHTML = teamHeader + `<div style="text-align:center;padding:30px 0;color:var(--gray);font-size:13px">No items for this filter</div>`; return; }
+    grid.innerHTML = teamHeader + `<div class="products">` + items.map(p => {
+      const name = `${team.name} ${p.kitType}`;
+      return `<div class="prod-card" onclick="showDetailFromTeam('${team.id}','${st.leagueId}',${p.id})">
+        ${p.badge?`<div class="badge ${p.badge}">${p.badge.toUpperCase()}</div>`:''}
+        <div class="prod-img-wrap">${p.imgUrl?`<img src="${p.imgUrl}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=prod-emoji>${p.emoji||'⚽'}</div>'">`: `<div class="prod-emoji">${p.emoji||'⚽'}</div>`}</div>
+        <div class="prod-info">
+          <div class="prod-league">${kitTypeIcon(p.kitType)} ${p.kitType}</div>
+          <div class="prod-name">${name}</div>
+          <div class="prod-foot"><div class="prod-price">${fmt(p.price)}</div>
+            <button class="add-btn" onclick="event.stopPropagation();quickAddTeam('${team.id}','${st.leagueId}',${p.id})">+</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+  } else {
+    // LEAGUE / ALL VIEW: team cards
+    let leagues = cfg.leagues || [];
+    if (st.leagueId !== 'all') leagues = leagues.filter(l => l.id === st.leagueId);
+    let rows = '';
+    leagues.forEach(lg => {
+      let teams = lg.teams || [];
+      if (query) teams = teams.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+      if (!teams.length) return;
+      if (st.leagueId === 'all') rows += `<div style="padding:12px 14px 8px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px"><span style="font-size:16px">${lg.emoji}</span>${lg.label}</div>`;
+      rows += `<div class="teams-grid">` + teams.map(team => `
+        <div class="team-card" onclick="selectTeam('${lg.id}','${team.id}')">
+          ${st.leagueId==='all'?`<div class="team-league-badge">${lg.emoji}</div>`:''}
+          <div class="team-crest">${team.crest?`<img src="${team.crest}" onerror="this.parentNode.textContent='${team.emoji}'">`:team.emoji}</div>
+          <div class="team-name">${team.name}</div>
+          <div class="team-kit-count">${(team.products||[]).length} items</div>
+        </div>`).join('') + `</div>`;
+    });
+    grid.innerHTML = rows || `<div style="text-align:center;padding:40px 0;color:var(--gray);font-size:13px">No teams found</div>`;
+  }
+}
+
+function renderProducts(cat, query) {
+  if (cat && cat !== 'all') shopState.leagueId = cat;
+  else shopState = { leagueId: 'all', teamId: null, kitFilter: 'all' };
+  renderShopGrid(query || '');
+  updateBreadcrumb(); updateShopTitle();
+}
+
+function filterKitType(type) { shopState.kitFilter = type; renderShopGrid(); }
+
+function kitTypeIcon(t) {
+  return {'Home Kit':'🏠','Away Kit':'✈️','Third Kit':'3️⃣','Goalkeeper':'🧤','Training Top':'💪','Shorts':'👖','UCL Edition':'🏆','Local':'🇪🇹'}[t] || '⚽';
+}
+
+function selectTeam(leagueId, teamId) {
+  shopState = { leagueId, teamId, kitFilter: 'all' };
+  renderShopGrid(); updateBreadcrumb(); updateShopTitle();
+  document.querySelector('.scroll').scrollTop = 0;
+}
+
+function findTeam(leagueId, teamId) {
+  return ((cfg.leagues||[]).find(l=>l.id===leagueId)?.teams||[]).find(t=>t.id===teamId) || null;
+}
+
+function findProductGlobal(productId) {
+  for (const lg of (cfg.leagues||[])) {
+    for (const team of (lg.teams||[])) {
+      const p = (team.products||[]).find(x=>x.id===productId);
+      if (p) return { product:p, team, league:lg };
+    }
+  }
+  return null;
+}
+
+function showDetailFromTeam(teamId, leagueId, productId) {
+  const found = findProductGlobal(productId);
+  if (!found) return;
+  const { product:p, team, league:lg } = found;
+  curProduct = { ...p, teamId:team.id, teamName:team.name, leagueId:lg.id, leagueName:lg.label, name:`${team.name} ${p.kitType}` };
+  selSize = cfg.sizes[2]||'M'; selQty = 1;
+  document.getElementById('det-title').textContent = `${team.name} — ${p.kitType}`;
+  document.getElementById('det-content').innerHTML = `
+    <div class="det-img-wrap">${p.imgUrl?`<img src="${p.imgUrl}" alt="${curProduct.name}" onerror="this.parentNode.innerHTML='<div class=det-emoji>${p.emoji||'⚽'}</div>'">`: `<div class="det-emoji">${p.emoji||'⚽'}</div>`}</div>
+    <div class="det-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid var(--border);overflow:hidden">
+          ${team.crest?`<img src="${team.crest}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${team.emoji}'">`:team.emoji}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.4px">${lg.label}</div>
+          <div style="font-size:12px;color:var(--light)">${team.name}</div>
+        </div>
+        <div style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:4px 9px">
+          <span style="font-size:12px">${kitTypeIcon(p.kitType)}</span>
+          <span style="font-size:11px;font-weight:600;color:var(--light)">${p.kitType}</span>
         </div>
       </div>
-    </div>
-  `).join('');
-}
-
-function showDetail(id){
-  curProduct = cfg.products.find(p=>p.id===id);
-  selSize = cfg.sizes[2]||'M';
-  selQty = 1;
-  document.getElementById('det-title').textContent = curProduct.name;
-  document.getElementById('det-content').innerHTML = `
-    <div class="det-img-wrap">
-      ${curProduct.imgUrl ? `<img src="${curProduct.imgUrl}" alt="${curProduct.name}" onerror="this.parentNode.innerHTML='<div class=det-emoji>${curProduct.emoji||'⚽'}</div>'">` : `<div class="det-emoji">${curProduct.emoji||'⚽'}</div>`}
-    </div>
-    <div class="det-body">
-      <div class="det-league">${curProduct.league}</div>
       <div class="det-name">${curProduct.name}</div>
-      <div class="det-price">${fmt(curProduct.price)}</div>
+      <div class="det-price">${fmt(p.price)}</div>
       <div class="size-lbl">Select Size</div>
       <div class="sizes">${cfg.sizes.map((s,i)=>`<div class="sz-btn ${i===2?'active':''}" onclick="selSz('${s}',this)">${s}</div>`).join('')}</div>
       <div class="qty-row">
@@ -1006,13 +1353,31 @@ function showDetail(id){
           <button onclick="chgQty(1)">+</button>
         </div>
       </div>
-      <div class="det-desc">${curProduct.desc}</div>
+      <div class="det-desc">${p.desc}</div>
       <button class="add-cart-btn" onclick="addToCart()">Add to Cart 🛒</button>
+      ${(team.products||[]).filter(x=>x.id!==p.id).length ? `
+      <div style="margin-top:16px;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--light)">More from ${team.name}</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none">
+        ${(team.products||[]).filter(x=>x.id!==p.id).map(x=>`
+          <div onclick="showDetailFromTeam('${team.id}','${lg.id}',${x.id})" style="flex-shrink:0;width:78px;cursor:pointer">
+            <div style="width:78px;height:78px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;border:1px solid var(--border);margin-bottom:5px">
+              ${x.imgUrl?`<img src="${x.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.textContent='${x.emoji||'⚽'}'">`:x.emoji||'⚽'}
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--light);text-align:center;line-height:1.3">${x.kitType}</div>
+            <div style="font-size:11px;color:var(--accent);text-align:center;font-weight:700">${fmt(x.price)}</div>
+          </div>`).join('')}
+      </div>` : ''}
       <div style="height:20px"></div>
-    </div>
-  `;
+    </div>`;
   showPage('detail');
 }
+
+function showDetail(id) {
+  const found = findProductGlobal(id);
+  if (found) showDetailFromTeam(found.team.id, found.league.id, id);
+}
+
+function detGoBack() { showPage('shop'); }
 
 function selSz(s,el){ selSize=s; document.querySelectorAll('.sz-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
 function chgQty(d){ selQty=Math.max(1,selQty+d); document.getElementById('qty-disp').textContent=selQty; }
@@ -1021,17 +1386,26 @@ function addToCart(){
   if(ex) ex.qty+=selQty; else cart.push({...curProduct,size:selSize,qty:selQty});
   updateBadge(); showToast('Added to cart! 🛒');
 }
-function quickAdd(id){
-  const p=cfg.products.find(x=>x.id===id);
-  const ex=cart.find(i=>i.id===id&&i.size===(cfg.sizes[2]||'M'));
-  if(ex) ex.qty++; else cart.push({...p,size:cfg.sizes[2]||'M',qty:1});
-  updateBadge(); showToast(`${p.name} added! 🛒`);
+function quickAddTeam(teamId, leagueId, productId) {
+  const found = findProductGlobal(productId);
+  if (!found) return;
+  const { product:p, team } = found;
+  const name = `${team.name} ${p.kitType}`;
+  const item = {...p, name, teamName:team.name, size:cfg.sizes[2]||'M', qty:1};
+  const ex = cart.find(i=>i.id===p.id&&i.size===item.size);
+  if(ex) ex.qty++; else cart.push(item);
+  updateBadge(); showToast(`${name} added! 🛒`);
+}
+function quickAdd(id) {
+  const found = findProductGlobal(id);
+  if (found) quickAddTeam(found.team.id, found.league.id, id);
 }
 function updateBadge(){
   const n=cart.reduce((a,i)=>a+i.qty,0);
   const b=document.getElementById('cart-badge');
   b.textContent=n; b.style.display=n>0?'flex':'none';
 }
+
 
 // ── SHIPPING OPTS (checkout) ──────────────────────
 function renderShipOpts(){
@@ -1462,7 +1836,14 @@ function goSearch(){
 }
 
 // ── NAVIGATION ────────────────────────────────────
-function goShop(){ setNav('shop'); showPage('shop'); }
+function goShop(){
+  shopState = { leagueId: 'all', teamId: null, kitFilter: 'all' };
+  renderCats();
+  renderShopGrid();
+  updateBreadcrumb();
+  updateShopTitle();
+  setNav('shop'); showPage('shop');
+}
 function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
