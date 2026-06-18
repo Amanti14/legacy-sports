@@ -760,6 +760,78 @@ function saveCart(){
   localStorage.setItem(k,JSON.stringify(cart));
 }
 
+// ── TRANSACTION PROOF ─────────────────────────────
+function getUsedTxns(){ try{ return JSON.parse(localStorage.getItem('emartzon_used_txns')||'[]'); }catch(e){ return []; } }
+function markTxnUsed(url){ const used=getUsedTxns(); used.push(url.trim().toLowerCase()); localStorage.setItem('emartzon_used_txns',JSON.stringify(used)); }
+function isTxnUsed(url){ return getUsedTxns().includes(url.trim().toLowerCase()); }
+
+function validateTxnUrl(url,method){
+  const u=url.trim().toLowerCase();
+  if(!u.startsWith('http')) return 'Please enter a valid URL starting with https://';
+  if(method==='telebirr'&&!u.includes('transactioninfo.ethiotelecom.et'))
+    return 'Telebirr links must be from transactioninfo.ethiotelecom.et\\nExample: https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX';
+  if(method==='cbe'&&!u.includes('cbe')&&!u.includes('combanketh')&&!u.includes('cbebirr'))
+    return 'CBE links must be from an official CBE domain.\\nExample: https://cbebirr.com/receipt/...';
+  return null;
+}
+
+let _pendingOrder=null;
+
+function showTxnProofScreen(p){
+  _pendingOrder=p;
+  const isT=p.rawPayment==='telebirr';
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-checkout').classList.add('active');
+  document.getElementById('main-hdr').style.display='none';
+  document.getElementById('checkout-scroll').innerHTML=`
+    <div style="height:20px"></div>
+    <div style="margin:0 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px">
+      <div style="background:linear-gradient(135deg,rgba(245,166,35,.15),rgba(245,166,35,.05));padding:16px 16px 14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:22px;margin-bottom:8px">${isT?'📱':'🏦'}</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">Confirm Your Payment</div>
+        <div style="font-size:12px;color:var(--gray);line-height:1.5">Paste your <b style="color:var(--white)">${isT?'Telebirr':'CBE Birr'}</b> transaction link to verify your transfer of <b style="color:var(--accent)">${p.totalFmt}</b>.</div>
+      </div>
+      <div style="padding:16px">
+        <div style="background:${isT?'rgba(167,139,250,.08)':'rgba(0,105,55,.1)'};border:1px solid ${isT?'rgba(167,139,250,.2)':'rgba(0,105,55,.25)'};border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:12px;line-height:1.7;color:var(--gray)">
+          <b style="color:${isT?'#a78bfa':'#4CAF50'}">${isT?'📱 How to get your Telebirr receipt link:':'🏦 How to get your CBE Birr receipt link:'}</b><br>
+          1. Open your ${isT?'Telebirr':'CBE Birr'} app → tap the transfer you just made<br>
+          2. Tap <b>${isT?'Share / Receipt':'Share Receipt'}</b> and copy the link<br>
+          ${isT?'<span style="font-family:monospace;font-size:10px;color:var(--light);word-break:break-all">https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX</span>':'<span style="font-size:11px;color:var(--light)">The link usually starts with https://cbebirr.com/...</span>'}
+        </div>
+        <div class="inp-group" style="margin-bottom:16px">
+          <label style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;color:var(--light)">Transaction Receipt Link</label>
+          <input type="url" id="txn-url-input"
+            placeholder="${isT?'https://transactioninfo.ethiotelecom.et/receipt/...':'https://cbebirr.com/receipt/...'}"
+            style="width:100%;box-sizing:border-box;background:var(--card2);border:1.5px solid var(--border);color:var(--white);padding:12px;border-radius:10px;font-size:13px;outline:none;font-family:monospace"
+            oninput="document.getElementById('txn-err').textContent='';this.style.borderColor='var(--border)'">
+          <div id="txn-err" style="font-size:11px;color:#ef4444;margin-top:6px;line-height:1.4;white-space:pre-wrap"></div>
+        </div>
+        <button onclick="submitTxnProof()" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">
+          ✅ Verify &amp; Complete Order
+        </button>
+        <div onclick="cancelTxnProof()" style="text-align:center;margin-top:12px;font-size:13px;color:var(--gray);cursor:pointer;padding:8px">
+          ← Go back to checkout
+        </div>
+      </div>
+    </div>
+    <div style="height:20px"></div>`;
+}
+
+function submitTxnProof(){
+  const url=(document.getElementById('txn-url-input')?.value||'').trim();
+  const errEl=document.getElementById('txn-err');
+  const inp=document.getElementById('txn-url-input');
+  if(!url){ errEl.textContent='Please paste your transaction receipt link.'; inp.style.borderColor='#ef4444'; return; }
+  if(isTxnUsed(url)){ errEl.textContent='\\u274c This transaction link has already been used for a previous order.\\nEach transaction can only be used once.'; inp.style.borderColor='#ef4444'; return; }
+  const err=validateTxnUrl(url,_pendingOrder?.rawPayment);
+  if(err){ errEl.textContent='\\u274c '+err; inp.style.borderColor='#ef4444'; return; }
+  markTxnUsed(url);
+  _pendingOrder.txnUrl=url;
+  completeOrder(_pendingOrder);
+}
+
+function cancelTxnProof(){ _pendingOrder=null; showCheckout(); }
+
 let cart=[];
 let orderHistory=JSON.parse(localStorage.getItem('emartzon_orders')||'[]');
 let curProduct=null, selSize="M", selQty=1, curShipping=null;
@@ -1186,10 +1258,6 @@ function updateCheckoutSummary(){
 
 // ── PLACE ORDER & RECEIPT ─────────────────────────
 function placeOrder(){
-  const oid='EM'+Date.now().toString().slice(-6);
-  const now=new Date();
-  const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-  const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   const sub=cart.reduce((a,i)=>a+i.price*i.qty,0);
   const ship=(curShipping||cfg.shipping[0])?.price||0;
   const total=sub+ship;
@@ -1200,9 +1268,22 @@ function placeOrder(){
   const city=document.getElementById('inp-city')?.value||'';
   const payMethods={cbe:'CBE Birr',telebirr:'Telebirr',cash:'Pay at Store'};
   const payMethod=payMethods[selectedPayment]||selectedPayment;
-  const cartSnapshot=deepClone(cart);
+  if(selectedPayment==='cbe'||selectedPayment==='telebirr'){
+    showTxnProofScreen({rawPayment:selectedPayment,paymentMethod:payMethod,totalFmt:fmt(total),sub,ship,total,buyer,phone,address,city,m:deepClone(m),cartSnapshot:deepClone(cart),txnUrl:null});
+    return;
+  }
+  completeOrder({rawPayment:'cash',paymentMethod:payMethod,totalFmt:fmt(total),sub,ship,total,buyer,phone,address,city,m:deepClone(m),cartSnapshot:deepClone(cart),txnUrl:null});
+}
 
-  const itemsHtml=cartSnapshot.map(item=>`
+function completeOrder(o){
+  const {sub,ship,total,m,buyer,phone,address,city,cartSnapshot,txnUrl}=o;
+  const payMethod=o.paymentMethod;
+  const oid='EM'+Date.now().toString().slice(-6);
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  const itemsHtml=(cartSnapshot||[]).map(item=>`
     <div class="receipt-item">
       <div class="receipt-item-img">${item.imgUrl?`<img src="${item.imgUrl}" onerror="this.parentNode.textContent='${item.emoji||'⚽'}'">`:item.emoji||'⚽'}</div>
       <div class="receipt-item-info">
@@ -1212,12 +1293,18 @@ function placeOrder(){
       <div class="receipt-item-price">${fmt(item.price*item.qty)}</div>
     </div>`).join('');
 
-  const payBadgeClass=selectedPayment==='cbe'?'cbe':selectedPayment==='telebirr'?'telebirr':'pickup';
-  const payInstr=selectedPayment==='cbe'
-    ?`Transfer <b>${fmt(total)}</b> to CBE account <b>${cfg.payment.cbeNum}</b> (${cfg.payment.cbeName}). Use Order ID <b>#${oid}</b> as reference.`
-    :selectedPayment==='telebirr'
-    ?`Send <b>${fmt(total)}</b> to Telebirr <b>${cfg.payment.telebirrNum}</b> (${cfg.payment.telebirrName}). Use Order ID <b>#${oid}</b> as note.`
+  const payBadgeClass=o.rawPayment==='cbe'?'cbe':o.rawPayment==='telebirr'?'telebirr':'pickup';
+  const payInstr=o.rawPayment==='cbe'
+    ?`Transfer verified via CBE Birr. Order ID: <b>#${oid}</b>.`
+    :o.rawPayment==='telebirr'
+    ?`Transfer verified via Telebirr. Order ID: <b>#${oid}</b>.`
     :`Pay <b>${fmt(total)}</b> when you pick up your order at the store. Show this receipt.`;
+
+  const txnHtml=txnUrl?`
+    <div class="receipt-section">
+      <div class="receipt-section-title">Payment Proof</div>
+      <div class="receipt-row"><span class="receipt-row-label">Transaction</span><span class="receipt-row-val" style="font-size:11px;word-break:break-all;color:var(--accent)">${txnUrl}</span></div>
+    </div>`:'';
 
   const deliveryInfo=m?.id==='pickup'
     ?`<div class="receipt-row"><span class="receipt-row-label">Pickup At</span><span class="receipt-row-val">${cfg.storeName}<br><span style="font-size:11px;color:var(--gray)">${cfg.address}</span></span></div><div class="receipt-row"><span class="receipt-row-label">Hours</span><span class="receipt-row-val">${cfg.hours}</span></div>`
@@ -1257,45 +1344,26 @@ function placeOrder(){
       <div class="receipt-row" style="margin-bottom:10px"><span class="receipt-row-label">Method</span><span class="receipt-row-val"><span class="receipt-pay-badge ${payBadgeClass}">${payMethod}</span></span></div>
       <div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:9px;padding:11px;font-size:12px;color:var(--light);line-height:1.6">${payInstr}</div>
     </div>
+    ${txnHtml}
     <div style="padding:14px 18px;background:var(--card2);display:flex;align-items:center;gap:10px">
       <div style="font-size:11px;color:var(--gray);flex:1;line-height:1.5">Thank you for shopping at ${cfg.storeName}! For help: ${cfg.phone}</div>
       <div style="font-size:22px">🙏</div>
     </div>`;
 
-  orderHistory.push({
-    id:oid,
-    userId:tgUser?String(tgUser.id):'guest',
-    date:dateStr,
-    total,
-    itemCount:cartSnapshot.reduce((a,i)=>a+i.qty,0),
-    method:m?.id||'delivery',
-    methodIcon:m?.icon||'📦',
-    methodName:m?.name||'Delivery',
-    paymentMethod:payMethod,
-    items:cartSnapshot.map(i=>({name:i.name,qty:i.qty,size:i.size,price:i.price})),
-  });
+  orderHistory.push({id:oid,userId:tgUser?String(tgUser.id):'guest',date:dateStr,total,itemCount:(cartSnapshot||[]).reduce((a,i)=>a+i.qty,0),method:m?.id||'delivery',methodIcon:m?.icon||'📦',methodName:m?.name||'Delivery',paymentMethod:payMethod,txnUrl:txnUrl||null,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:i.price}))});
   saveOrders();
 
-  try {
+  try{
     const tg=window.Telegram?.WebApp;
     if(tg&&tg.sendData){
-      const receiptData=JSON.stringify({
-        type:'order',orderId:oid,buyer,
-        telegramId:tgUser?.id,username:tgUser?.username,
-        items:cartSnapshot.map(i=>({name:i.name,qty:i.qty,size:i.size,price:fmt(i.price*i.qty)})),
-        subtotal:fmt(sub),shipping:ship===0?'Free':fmt(ship),total:fmt(total),
-        delivery:m?.name,paymentMethod:payMethod,
-        address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),
-        date:dateStr,time:timeStr,
-      });
-      tg.sendData(receiptData);
+      tg.sendData(JSON.stringify({type:'order',orderId:oid,buyer,telegramId:tgUser?.id,username:tgUser?.username,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:fmt(i.price*i.qty)})),subtotal:fmt(sub),shipping:ship===0?'Free':fmt(ship),total:fmt(total),delivery:m?.name,paymentMethod:payMethod,txnUrl:txnUrl||null,address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),date:dateStr,time:timeStr}));
     }
-  } catch(e){}
+  }catch(e){}
 
-  // Clear cart after successful order
   cart=[];
-  saveCart(); // ← save empty cart after order placed
+  saveCart();
   updateBadge();
+  _pendingOrder=null;
   showPage('success');
 }
 
