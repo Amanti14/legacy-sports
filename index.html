@@ -97,7 +97,7 @@
   <div class="scroll2" id="cart-content"></div>
 </div>
 
-<!-- CHECKOUT PAGE (rebuilt with payment) -->
+<!-- CHECKOUT PAGE -->
 <div class="page" id="page-checkout">
   <div class="pg-hdr">
     <button class="back-btn" onclick="showCart()">← Cart</button>
@@ -105,14 +105,10 @@
   </div>
   <div class="scroll2" id="checkout-scroll">
     <div style="height:14px"></div>
-
-    <!-- Step 1: Delivery Method -->
     <div class="form-sec">
       <h3>📦 Step 1 — Delivery Method</h3>
       <div id="ship-opts-container"></div>
     </div>
-
-    <!-- Address form (hidden for pickup) -->
     <div id="addr-form-wrap">
       <div class="form-sec">
         <h3>📍 Delivery Address</h3>
@@ -129,59 +125,35 @@
         <div class="inp-group"><label>Address / Landmark</label><input type="text" placeholder="Near landmark / building" id="inp-address"></div>
       </div>
     </div>
-
-    <!-- Pickup info -->
     <div id="pickup-info-wrap" style="display:none">
       <div class="form-sec">
         <h3>🏪 Store Location</h3>
         <div id="pickup-store-card" style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px"></div>
       </div>
     </div>
-
-    <!-- Step 2: Payment Method -->
     <div class="form-sec">
       <h3>💳 Step 2 — Payment Method</h3>
-
-      <!-- CBE Birr -->
       <div class="pay-opt selected" id="pay-cbe" onclick="selectPayment('cbe')">
         <div class="ship-radio"><div class="ship-dot"></div></div>
         <div class="pay-opt-logo" style="background:#006937;color:#fff;font-size:13px;font-weight:800;letter-spacing:-.5px">CBE</div>
-        <div class="pay-opt-info">
-          <div class="pay-opt-name">CBE Birr</div>
-          <div class="pay-opt-desc">Commercial Bank of Ethiopia mobile</div>
-        </div>
+        <div class="pay-opt-info"><div class="pay-opt-name">CBE Birr</div><div class="pay-opt-desc">Commercial Bank of Ethiopia mobile</div></div>
       </div>
-
-      <!-- Telebirr -->
       <div class="pay-opt" id="pay-telebirr" onclick="selectPayment('telebirr')">
         <div class="ship-radio"><div class="ship-dot"></div></div>
         <div class="pay-opt-logo" style="background:linear-gradient(135deg,#6610f2,#9b42e8);color:#fff;font-size:10px;font-weight:800;letter-spacing:-.3px">tele<br>birr</div>
-        <div class="pay-opt-info">
-          <div class="pay-opt-name">Telebirr</div>
-          <div class="pay-opt-desc">Ethio Telecom mobile money</div>
-        </div>
+        <div class="pay-opt-info"><div class="pay-opt-name">Telebirr</div><div class="pay-opt-desc">Ethio Telecom mobile money</div></div>
       </div>
-
-      <!-- Pay on Pickup -->
       <div class="pay-opt" id="pay-pickup-cash" onclick="selectPayment('cash')">
         <div class="ship-radio"><div class="ship-dot"></div></div>
         <div class="pay-opt-logo" style="background:var(--card2);font-size:22px">🏪</div>
-        <div class="pay-opt-info">
-          <div class="pay-opt-name">Pay at Store</div>
-          <div class="pay-opt-desc">Pay when you collect your order</div>
-        </div>
+        <div class="pay-opt-info"><div class="pay-opt-name">Pay at Store</div><div class="pay-opt-desc">Pay when you collect your order</div></div>
       </div>
-
-      <!-- Payment instructions (shown dynamically) -->
       <div id="payment-instructions-box"></div>
     </div>
-
-    <!-- Step 3: Order Summary -->
     <div class="form-sec">
       <h3>🧾 Step 3 — Order Summary</h3>
       <div class="summary-box" id="checkout-summary-box" style="margin:0 0 14px"></div>
     </div>
-
     <button class="place-btn" id="place-order-btn" onclick="placeOrder()">Confirm & Place Order 🎉</button>
   </div>
 </div>
@@ -193,16 +165,11 @@
     <button onclick="goShop()" style="margin-left:auto;background:var(--accent);color:var(--bg);border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🏠 Home</button>
   </div>
   <div class="scroll2" style="padding:14px 14px 20px">
-    <!-- Receipt card -->
-    <div class="receipt-card" id="receipt-card">
-      <!-- filled by JS -->
-    </div>
-    <!-- Action buttons -->
+    <div class="receipt-card" id="receipt-card"></div>
     <div class="receipt-actions">
       <button class="receipt-action-btn" onclick="shareReceipt()">📤 Share Receipt</button>
       <button class="receipt-action-btn" onclick="goShop()">🛍 Keep Shopping</button>
     </div>
-    <!-- Bot message note -->
     <div style="background:rgba(35,157,219,.08);border:1px solid rgba(35,157,219,.2);border-radius:12px;padding:13px 14px;display:flex;gap:10px;align-items:flex-start">
       <div style="font-size:20px;flex-shrink:0">🤖</div>
       <div style="font-size:12px;color:var(--gray);line-height:1.6">Your receipt has also been sent to you as a message in Telegram. Show it at the store or keep it for delivery tracking.</div>
@@ -252,7 +219,6 @@
       <div class="profile-action-row" onclick="showCart()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)"><div style="font-size:20px;width:24px;text-align:center">🛒</div><div style="flex:1"><div style="font-size:13px;font-weight:600">My Cart</div><div id="profile-cart-count" style="font-size:11px;color:var(--gray)">0 items</div></div><div style="color:var(--gray);font-size:18px">›</div></div>
       <div class="profile-action-row" onclick="showInfo()" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 14px"><div style="font-size:20px;width:24px;text-align:center">🏪</div><div style="flex:1"><div style="font-size:13px;font-weight:600">Store Info</div><div style="font-size:11px;color:var(--gray)">Location, hours & contact</div></div><div style="color:var(--gray);font-size:18px">›</div></div>
     </div>
-    <!-- ORDER HISTORY -->
     <div style="margin:0 14px 12px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
       <div style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Order History</div>
       <div id="profile-orders-list"></div>
@@ -264,6 +230,19 @@
         <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.5px;white-space:nowrap">⚙️ ADMIN SETTINGS</div>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
+      <!-- JSONBin setup notice (shown until configured) -->
+      <div id="jsonbin-setup-notice" style="display:none;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px">⚠️ Cloud Sync Not Configured</div>
+        <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:10px">Your edits currently only apply to your own device. To sync changes to all users, set up a free JSONBin account:</div>
+        <div style="font-size:12px;color:var(--light);line-height:1.8">1. Go to <b>jsonbin.io</b> → Sign up free<br>2. Create a new Bin with <code style="background:var(--card2);padding:1px 5px;border-radius:4px">{}</code> as content<br>3. Copy your <b>Bin ID</b> and <b>API Key</b><br>4. Paste them below and tap Save</div>
+        <div style="margin-top:12px">
+          <div class="adm-field"><label>JSONBin Bin ID</label><input id="jsonbin-bin-id-setup" type="text" placeholder="64abc123..."></div>
+          <div class="adm-field"><label>JSONBin API Key</label><input id="jsonbin-api-key-setup" type="text" placeholder="$2a$10$..."></div>
+          <button class="btn-save" onclick="saveJsonBinCredentials()" style="width:100%;margin-top:4px">Save & Enable Cloud Sync ☁️</button>
+        </div>
+      </div>
+      <!-- Sync status bar -->
+      <div id="sync-status-bar" style="display:none;padding:8px 12px;border-radius:9px;margin-bottom:12px;font-size:12px;font-weight:600;text-align:center"></div>
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);border-radius:12px 12px 0 0;overflow:hidden;overflow-x:auto;scrollbar-width:none">
         <div class="padm-tab active" onclick="switchProfileAdminTab(0,this)">Products</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(1,this)">Shipping</div>
@@ -271,6 +250,7 @@
         <div class="padm-tab" onclick="switchProfileAdminTab(3,this)">Store</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(4,this)">Theme</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(5,this)">Hero</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(6,this)">☁️ Sync</div>
       </div>
       <div style="background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
         <div class="padm-panel active" id="padm-panel-0" style="padding:12px">
@@ -281,25 +261,12 @@
           <div id="padm-shipping-list"></div>
           <button class="btn-add" onclick="padmAddShipping()">＋ Add Method</button>
         </div>
-        <!-- PAYMENT SETTINGS TAB -->
         <div class="padm-panel" id="padm-panel-2" style="padding:12px">
           <div style="font-size:11px;color:var(--gray);margin-bottom:14px;line-height:1.5">Set your payment account numbers. Customers will see these when they choose a payment method.</div>
-          <div class="adm-field">
-            <label>CBE Birr Account Number</label>
-            <input id="padm-cbe-num" type="text" placeholder="1000123456789">
-          </div>
-          <div class="adm-field">
-            <label>CBE Account Name</label>
-            <input id="padm-cbe-name" type="text" placeholder="Emartzon Sportswear">
-          </div>
-          <div class="adm-field" style="margin-top:14px">
-            <label>Telebirr Number</label>
-            <input id="padm-telebirr-num" type="text" placeholder="+251 9XX XXX XXX">
-          </div>
-          <div class="adm-field">
-            <label>Telebirr Account Name</label>
-            <input id="padm-telebirr-name" type="text" placeholder="Emartzon Sportswear">
-          </div>
+          <div class="adm-field"><label>CBE Birr Account Number</label><input id="padm-cbe-num" type="text" placeholder="1000123456789"></div>
+          <div class="adm-field"><label>CBE Account Name</label><input id="padm-cbe-name" type="text" placeholder="Emartzon Sportswear"></div>
+          <div class="adm-field" style="margin-top:14px"><label>Telebirr Number</label><input id="padm-telebirr-num" type="text" placeholder="+251 9XX XXX XXX"></div>
+          <div class="adm-field"><label>Telebirr Account Name</label><input id="padm-telebirr-name" type="text" placeholder="Emartzon Sportswear"></div>
           <button class="btn-save" onclick="padmSavePayment()" style="width:100%;margin-top:4px">Save Payment Info</button>
         </div>
         <div class="padm-panel" id="padm-panel-3" style="padding:12px">
@@ -337,6 +304,31 @@
           <div class="adm-field"><label>Subtitle</label><input id="padm-hero-sub" type="text"></div>
           <div class="adm-field"><label>Hero Image URL</label><input id="padm-hero-img" type="url" placeholder="https://..."></div>
           <button class="btn-save" onclick="padmSaveHero()" style="width:100%">Save Hero</button>
+        </div>
+        <!-- SYNC TAB -->
+        <div class="padm-panel" id="padm-panel-6" style="padding:12px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">☁️ Cloud Sync Settings</div>
+          <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:14px">
+            When cloud sync is enabled, every save you make is pushed to all users in real time. Users load the shared config on startup instead of relying on their own device.
+          </div>
+          <div id="sync-current-status" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--gray)">Checking sync status…</div>
+          <div class="adm-field"><label>JSONBin Bin ID</label><input id="jsonbin-bin-id" type="text" placeholder="64abc123..."></div>
+          <div class="adm-field"><label>JSONBin API Key</label><input id="jsonbin-api-key" type="text" placeholder="$2a$10$..."></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn-save" onclick="saveJsonBinCredentials()" style="flex:1">Save Credentials</button>
+            <button class="btn-outline" onclick="testJsonBinConnection()">Test</button>
+          </div>
+          <div style="margin-top:12px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:12px;font-size:12px;color:var(--gray);line-height:1.7">
+            <b style="color:var(--accent)">How to set up (free, 2 minutes):</b><br>
+            1. Go to <b style="color:var(--light)">jsonbin.io</b> and create a free account<br>
+            2. Click <b style="color:var(--light)">New Bin</b>, paste <code style="background:var(--card2);padding:1px 4px;border-radius:3px">{}</code>, save it<br>
+            3. Copy the <b style="color:var(--light)">Bin ID</b> from the URL (it looks like <code style="background:var(--card2);padding:1px 4px;border-radius:3px">64a...</code>)<br>
+            4. Go to <b style="color:var(--light)">API Keys</b> in your account, create a key<br>
+            5. Paste both here and tap <b style="color:var(--light)">Save Credentials</b><br>
+            6. Then push your config with <b style="color:var(--light)">Push Config to Cloud</b>
+          </div>
+          <button class="btn-save" onclick="pushConfigToCloud()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#22c55e,#16a34a)">⬆️ Push Config to Cloud (apply to all users)</button>
+          <button class="btn-outline" onclick="pullConfigFromCloud()" style="width:100%;margin-top:8px">⬇️ Pull Latest Config from Cloud</button>
         </div>
       </div>
     </div>
@@ -406,9 +398,6 @@
     <div class="adm-field" id="pm-price-row"><label>Price (ETB)</label><input id="pm-price" type="number" placeholder="1850" min="0"></div>
     <div class="adm-field" id="pm-badge-row"><label>Badge</label><select id="pm-badge"><option value="">None</option><option value="new">NEW</option><option value="hot">HOT</option><option value="sale">SALE</option><option value="local">LOCAL</option></select></div>
     <div class="adm-field" id="pm-desc-row"><label>Description</label><textarea id="pm-desc" rows="3" placeholder="Official 2024/25 jersey..."></textarea></div>
-    <div style="display:flex;gap:8px;margin-top:6px">
-      <button class="btn-del" id="prod-modal-del-btn" style="display:none" onclick="closeProdModal()">Cancel</button>
-    </div>
   </div>
 </div>
 
@@ -424,7 +413,6 @@ const DEFAULT_CONFIG = {
   address:"Bole Road, Near Edna Mall, Addis Ababa",hours:"Mon–Sat 9AM–7PM",
   about:"Ethiopia's #1 destination for authentic football jerseys. Official kits from Premier League, La Liga, Bundesliga, Ligue 1, Serie A, Champions League and National Teams.",
   currency:"ETB",currencyPos:"before",
-  // PAYMENT ACCOUNTS — admin editable
   payment:{ cbeNum:"1000123456789", cbeName:"Emartzon Sportswear", telebirrNum:"+251 911 234 567", telebirrName:"Emartzon Sportswear" },
   hero:{tag:"⚽ New Season 2024/25",h1a:"Official",h1b:"Football Jerseys",sub:"Authentic kits from top leagues worldwide",imgUrl:""},
   theme:{"--accent":"#f5a623","--bg":"#0a0a0a","--card":"#1a1a1a","--dark":"#111111","--white":"#ffffff","--border":"#2a2a2a"},
@@ -736,6 +724,115 @@ function mergeLeagues(saved, defaults) {
   });
 }
 
+// ── CLOUD SYNC (JSONBin) ──────────────────────────
+// JSONBin.io is a free JSON storage API. Admin sets Bin ID + API Key once.
+// On startup, all users fetch the shared config. On admin save, config is pushed to the bin.
+// Credentials are stored only in the admin's localStorage (never sent to other users).
+
+const JBIN_CREDS_KEY = 'emartzon_jbin';
+
+function getJBinCreds(){
+  try{ return JSON.parse(localStorage.getItem(JBIN_CREDS_KEY)||'null'); }catch(e){ return null; }
+}
+function hasCloudSync(){
+  const c=getJBinCreds(); return !!(c&&c.binId&&c.apiKey);
+}
+
+async function fetchCloudConfig(){
+  const c=getJBinCreds(); if(!c||!c.binId) return null;
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}/latest`,{
+      headers:{'X-Master-Key':c.apiKey,'X-Bin-Meta':'false'}
+    });
+    if(!res.ok) return null;
+    const data=await res.json();
+    // JSONBin wraps in {record:...} for meta requests; with X-Bin-Meta:false it returns data directly
+    return (typeof data==='object'&&data!==null&&!Array.isArray(data)&&Object.keys(data).length>2)?data:null;
+  }catch(e){ return null; }
+}
+
+async function pushCloudConfig(showMsg=true){
+  const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
+  setSyncStatus('⏳ Syncing to cloud…','#f5a623');
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},
+      body:JSON.stringify(cfg)
+    });
+    if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); return true; }
+    else{ setSyncStatus('❌ Sync failed — check your credentials','#ef4444'); showMsg&&showToast('Sync failed. Check your Bin ID & API key.'); return false; }
+  }catch(e){ setSyncStatus('❌ Network error during sync','#ef4444'); showMsg&&showToast('Network error during sync'); return false; }
+}
+
+function setSyncStatus(msg,color){
+  const el=document.getElementById('sync-status-bar'); if(!el) return;
+  el.style.display='block';
+  el.style.background=color+'22';
+  el.style.border=`1px solid ${color}55`;
+  el.style.color=color;
+  el.textContent=msg;
+  clearTimeout(el._t);
+  if(color==='#22c55e') el._t=setTimeout(()=>{ el.style.display='none'; },5000);
+}
+
+function saveJsonBinCredentials(){
+  const binId=(document.getElementById('jsonbin-bin-id-setup')?.value||document.getElementById('jsonbin-bin-id')?.value||'').trim();
+  const apiKey=(document.getElementById('jsonbin-api-key-setup')?.value||document.getElementById('jsonbin-api-key')?.value||'').trim();
+  if(!binId||!apiKey){ showToast('Enter both Bin ID and API Key'); return; }
+  localStorage.setItem(JBIN_CREDS_KEY,JSON.stringify({binId,apiKey}));
+  // Fill both inputs
+  ['jsonbin-bin-id','jsonbin-bin-id-setup'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=binId; });
+  ['jsonbin-api-key','jsonbin-api-key-setup'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=apiKey; });
+  document.getElementById('jsonbin-setup-notice')?.style?.display && (document.getElementById('jsonbin-setup-notice').style.display='none');
+  showToast('Credentials saved! Now tap Push Config to Cloud.');
+  updateSyncStatusPanel();
+}
+
+async function testJsonBinConnection(){
+  const c=getJBinCreds(); if(!c){ showToast('Save credentials first'); return; }
+  setSyncStatus('⏳ Testing connection…','#f5a623');
+  const result=await fetchCloudConfig();
+  if(result!==null){ setSyncStatus('✅ Connection successful!','#22c55e'); }
+  else{ setSyncStatus('❌ Connection failed — check credentials','#ef4444'); }
+}
+
+async function pushConfigToCloud(){
+  await pushCloudConfig(true);
+}
+
+async function pullConfigFromCloud(){
+  const remote=await fetchCloudConfig();
+  if(!remote){ showToast('Could not fetch config from cloud'); return; }
+  applyRemoteConfig(remote);
+  showToast('Latest config pulled from cloud ✅');
+}
+
+function applyRemoteConfig(remote){
+  const localOwner=cfg.ownerTelegramId;
+  const localAdmins=cfg.adminIds||[];
+  cfg=Object.assign({},DEFAULT_CONFIG,remote);
+  cfg.leagues=mergeLeagues(remote.leagues,DEFAULT_CONFIG.leagues);
+  if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
+  // Never overwrite ownership from remote on the owner's own device
+  if(tgUser&&isOwner()&&localOwner){ cfg.ownerTelegramId=localOwner; cfg.adminIds=localAdmins; }
+  localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
+  applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
+}
+
+function updateSyncStatusPanel(){
+  const el=document.getElementById('sync-current-status'); if(!el) return;
+  const c=getJBinCreds();
+  if(c&&c.binId&&c.apiKey){
+    el.innerHTML=`<span style="color:#22c55e;font-weight:700">☁️ Cloud Sync ENABLED</span><br>Bin: <code style="background:var(--card);padding:1px 5px;border-radius:4px">${c.binId}</code><br>Every save pushes to all users automatically.`;
+  } else {
+    el.innerHTML=`<span style="color:#f5a623;font-weight:700">⚠️ Cloud Sync NOT configured</span><br>Your changes only apply to your device.`;
+  }
+  // Populate inputs
+  if(c){ ['jsonbin-bin-id','jsonbin-bin-id-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.binId||''; }); ['jsonbin-api-key','jsonbin-api-key-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.apiKey||''; }); }
+}
+
+// ── MODIFIED save() — also pushes to cloud ────────
 let savedCfg=JSON.parse(localStorage.getItem('emartzon_cfg')||'null');
 let cfg;
 if(savedCfg){
@@ -746,9 +843,7 @@ if(savedCfg){
   cfg=deepClone(DEFAULT_CONFIG);
 }
 
-// ── CART PERSISTENCE ─────────────────────────────
-// Cart is stored per-user: emartzon_cart_<userId>
-// Loaded after login, saved on every change
+// ── CART PERSISTENCE ──────────────────────────────
 function cartKey(){ return tgUser ? 'emartzon_cart_'+String(tgUser.id) : null; }
 function loadCart(){
   const k=cartKey(); if(!k) return;
@@ -769,9 +864,9 @@ function validateTxnUrl(url,method){
   const u=url.trim().toLowerCase();
   if(!u.startsWith('http')) return 'Please enter a valid URL starting with https://';
   if(method==='telebirr'&&!u.includes('transactioninfo.ethiotelecom.et'))
-    return 'Telebirr links must be from transactioninfo.ethiotelecom.et\\nExample: https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX';
+    return 'Telebirr links must be from transactioninfo.ethiotelecom.et\nExample: https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX';
   if(method==='cbe'&&!u.includes('cbe')&&!u.includes('combanketh')&&!u.includes('cbebirr'))
-    return 'CBE links must be from an official CBE domain.\\nExample: https://cbebirr.com/receipt/...';
+    return 'CBE links must be from an official CBE domain.\nExample: https://cbebirr.com/receipt/...';
   return null;
 }
 
@@ -796,7 +891,7 @@ function showTxnProofScreen(p){
           <b style="color:${isT?'#a78bfa':'#4CAF50'}">${isT?'📱 How to get your Telebirr receipt link:':'🏦 How to get your CBE Birr receipt link:'}</b><br>
           1. Open your ${isT?'Telebirr':'CBE Birr'} app → tap the transfer you just made<br>
           2. Tap <b>${isT?'Share / Receipt':'Share Receipt'}</b> and copy the link<br>
-          ${isT?'<span style="font-family:monospace;font-size:10px;color:var(--light);word-break:break-all">https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX</span>':'<span style="font-size:11px;color:var(--light)">The link usually starts with https://cbebirr.com/...</span>'}
+          <span style="font-family:monospace;font-size:10px;color:var(--light);word-break:break-all">${isT?'https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX':'https://cbebirr.com/receipt/...'}</span>
         </div>
         <div class="inp-group" style="margin-bottom:16px">
           <label style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;color:var(--light)">Transaction Receipt Link</label>
@@ -822,9 +917,9 @@ function submitTxnProof(){
   const errEl=document.getElementById('txn-err');
   const inp=document.getElementById('txn-url-input');
   if(!url){ errEl.textContent='Please paste your transaction receipt link.'; inp.style.borderColor='#ef4444'; return; }
-  if(isTxnUsed(url)){ errEl.textContent='\\u274c This transaction link has already been used for a previous order.\\nEach transaction can only be used once.'; inp.style.borderColor='#ef4444'; return; }
+  if(isTxnUsed(url)){ errEl.textContent='❌ This transaction link has already been used for a previous order.\nEach transaction can only be used once.'; inp.style.borderColor='#ef4444'; return; }
   const err=validateTxnUrl(url,_pendingOrder?.rawPayment);
-  if(err){ errEl.textContent='\\u274c '+err; inp.style.borderColor='#ef4444'; return; }
+  if(err){ errEl.textContent='❌ '+err; inp.style.borderColor='#ef4444'; return; }
   markTxnUsed(url);
   _pendingOrder.txnUrl=url;
   completeOrder(_pendingOrder);
@@ -835,12 +930,16 @@ function cancelTxnProof(){ _pendingOrder=null; showCheckout(); }
 let cart=[];
 let orderHistory=JSON.parse(localStorage.getItem('emartzon_orders')||'[]');
 let curProduct=null, selSize="M", selQty=1, curShipping=null;
-let selectedPayment='cbe'; // cbe | telebirr | cash
+let selectedPayment='cbe';
 let shopState={leagueId:'all',teamId:null,kitFilter:'all'};
 let modalCtx=null;
 let tgUser=null;
 
-function save(){ localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); }
+// save() now also syncs to cloud if configured
+function save(){
+  localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
+  if(hasCloudSync()) pushCloudConfig(false);
+}
 function saveOrders(){ localStorage.setItem('emartzon_orders',JSON.stringify(orderHistory)); }
 function fmt(n){ return cfg.currencyPos==='after'?n.toLocaleString()+' '+cfg.currency:cfg.currency+' '+n.toLocaleString(); }
 function isOwner(){ if(!tgUser) return false; if(!cfg.ownerTelegramId) return true; return String(tgUser.id)===String(cfg.ownerTelegramId); }
@@ -850,12 +949,17 @@ function claimOwnership(){ if(!cfg.ownerTelegramId&&tgUser){ cfg.ownerTelegramId
 // ── LOGIN ──────────────────────────────────────────
 window.addEventListener('load',()=>{ applyTheme(); initLogin(); });
 
-function initLogin(){
+async function initLogin(){
   const li=document.getElementById('login-logo-inner');
   if(cfg.logoUrl){ li.innerHTML=`<img src="${cfg.logoUrl}" onerror="this.parentNode.textContent='${cfg.logoEmoji||'⚽'}'">` }
   else { li.textContent=cfg.logoEmoji||'⚽'; }
   document.getElementById('login-brand-name').innerHTML=`${cfg.brandName1||'emart'}<span>${cfg.brandName2||'zon'}</span>`;
   document.getElementById('login-tagline').textContent=cfg.storeSub||'Official Football Jerseys';
+
+  // Try to fetch remote config for all users on startup
+  const remote=await fetchCloudConfig();
+  if(remote){ applyRemoteConfig(remote); }
+
   function tryTelegram(){
     try{
       const tg=window.Telegram?.WebApp;
@@ -896,7 +1000,7 @@ function enterApp(){
 }
 function bootApp(){
   claimOwnership();
-  loadCart(); // ← load saved cart for this user
+  loadCart();
   renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
   renderShipOpts(); renderPickupCard();
   curShipping=cfg.shipping[0];
@@ -1095,8 +1199,7 @@ function chgQty(d){ selQty=Math.max(1,selQty+d); document.getElementById('qty-di
 function addToCart(){
   const ex=cart.find(i=>i.id===curProduct.id&&i.size===selSize);
   if(ex) ex.qty+=selQty; else cart.push({...curProduct,size:selSize,qty:selQty});
-  saveCart(); // ← persist after every change
-  updateBadge(); showToast('Added to cart! 🛒');
+  saveCart(); updateBadge(); showToast('Added to cart! 🛒');
 }
 function quickAdd(pid){
   const found=findProduct(pid); if(!found) return;
@@ -1104,8 +1207,7 @@ function quickAdd(pid){
   const item={...p,name,teamName:team.name,size:cfg.sizes[2]||'M',qty:1};
   const ex=cart.find(i=>i.id===p.id&&i.size===item.size);
   if(ex) ex.qty++; else cart.push(item);
-  saveCart(); // ← persist after every change
-  updateBadge(); showToast(`${name} added! 🛒`);
+  saveCart(); updateBadge(); showToast(`${name} added! 🛒`);
 }
 function updateBadge(){ const n=cart.reduce((a,i)=>a+i.qty,0); const b=document.getElementById('cart-badge'); b.textContent=n; b.style.display=n>0?'flex':'none'; }
 
@@ -1166,7 +1268,7 @@ function renderPaymentInstructions(method){
         <div style="font-size:12px;color:var(--gray);margin-bottom:8px">Account Name: <b style="color:var(--light)">${pay.cbeName}</b></div>
         <div class="pay-step"><div class="pay-step-num">3</div><div class="pay-step-text">Enter the <b>exact total amount</b> shown in the summary below</div></div>
         <div class="pay-step"><div class="pay-step-num">4</div><div class="pay-step-text">Use your <b>Order ID</b> (shown after confirming) as the reference/note</div></div>
-        <div class="pay-step"><div class="pay-step-num">5</div><div class="pay-step-text">Take a screenshot of the transfer confirmation — your receipt will show the order details</div></div>
+        <div class="pay-step"><div class="pay-step-num">5</div><div class="pay-step-text">Take a screenshot of the transfer confirmation</div></div>
       </div>`;
   } else if(method==='telebirr'){
     box.innerHTML=`
@@ -1181,8 +1283,7 @@ function renderPaymentInstructions(method){
         </div>
         <div style="font-size:12px;color:var(--gray);margin-bottom:8px">Account Name: <b style="color:var(--light)">${pay.telebirrName}</b></div>
         <div class="pay-step"><div class="pay-step-num">3</div><div class="pay-step-text">Send the <b>exact total amount</b> shown in the order summary</div></div>
-        <div class="pay-step"><div class="pay-step-num">4</div><div class="pay-step-text">Use your <b>Order ID</b> (shown after confirming) as the transfer note</div></div>
-        <div class="pay-step"><div class="pay-step-num">5</div><div class="pay-step-text">Keep the Telebirr receipt — your order receipt will be sent to your Telegram</div></div>
+        <div class="pay-step"><div class="pay-step-num">4</div><div class="pay-step-text">Keep the Telebirr receipt for verification</div></div>
       </div>`;
   } else {
     box.innerHTML=`
@@ -1231,11 +1332,7 @@ function showCart(){
   }
   setNav('cart'); showPage('cart');
 }
-function rmItem(idx){
-  cart.splice(idx,1);
-  saveCart(); // ← persist after removal
-  updateBadge(); showCart();
-}
+function rmItem(idx){ cart.splice(idx,1); saveCart(); updateBadge(); showCart(); }
 
 // ── CHECKOUT ──────────────────────────────────────
 function showCheckout(){
@@ -1360,11 +1457,7 @@ function completeOrder(o){
     }
   }catch(e){}
 
-  cart=[];
-  saveCart();
-  updateBadge();
-  _pendingOrder=null;
-  showPage('success');
+  cart=[]; saveCart(); updateBadge(); _pendingOrder=null; showPage('success');
 }
 
 function shareReceipt(){
@@ -1411,7 +1504,13 @@ function showProfile(){
   else { ol.innerHTML=[...uOrders].reverse().map(o=>`<div style="padding:13px 14px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:13px;font-weight:700">#${o.id}</div><div style="font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;background:${o.method==='pickup'?'rgba(46,204,113,.12)':'rgba(245,166,35,.12)'};color:${o.method==='pickup'?'#2ecc71':'var(--accent)'}">${o.methodIcon} ${o.methodName}</div></div><div style="font-size:11px;color:var(--gray);margin-bottom:4px">${o.date} · ${o.itemCount} item${o.itemCount!==1?'s':''} · ${o.paymentMethod||''}</div><div style="font-size:14px;font-weight:700;color:var(--accent)">${fmt(o.total)}</div></div>`).join(''); }
   document.getElementById('profile-admin-section').style.display=isAdmin()?'block':'none';
   document.getElementById('profile-owner-section').style.display=isOwner()?'block':'none';
-  if(isAdmin()) populatePadmForms();
+  if(isAdmin()){
+    populatePadmForms();
+    updateSyncStatusPanel();
+    // Show setup notice if cloud not configured
+    const notice=document.getElementById('jsonbin-setup-notice');
+    if(notice) notice.style.display=hasCloudSync()?'none':'block';
+  }
   if(isOwner()){ renderManageAdmins(); const oid=document.getElementById('owner-id-display'); const mid=document.getElementById('owner-my-id-copy'); if(oid) oid.textContent=cfg.ownerTelegramId||String(u.id); if(mid) mid.textContent=String(u.id); }
   setNav('profile'); showPage('profile');
 }
@@ -1428,7 +1527,7 @@ function populatePadmForms(){
   if(cu) cu.value=cfg.currency||'ETB'; if(cp) cp.value=cfg.currencyPos||'before';
   const h=cfg.hero; [['padm-hero-tag',h.tag],['padm-hero-h1a',h.h1a],['padm-hero-h1b',h.h1b],['padm-hero-sub',h.sub],['padm-hero-img',h.imgUrl]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
 }
-function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); }
+function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); }
 
 function padmRenderProducts(){
   const list=document.getElementById('padm-products-list'); if(!list) return;
