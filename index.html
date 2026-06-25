@@ -230,7 +230,6 @@
         <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.5px;white-space:nowrap">⚙️ ADMIN SETTINGS</div>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
-      <!-- JSONBin setup notice (shown until configured) -->
       <div id="jsonbin-setup-notice" style="display:none;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:14px;margin-bottom:14px">
         <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px">⚠️ Cloud Sync Not Configured</div>
         <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:10px">Your edits currently only apply to your own device. To sync changes to all users, set up a free JSONBin account:</div>
@@ -241,7 +240,6 @@
           <button class="btn-save" onclick="saveJsonBinCredentials()" style="width:100%;margin-top:4px">Save & Enable Cloud Sync ☁️</button>
         </div>
       </div>
-      <!-- Sync status bar -->
       <div id="sync-status-bar" style="display:none;padding:8px 12px;border-radius:9px;margin-bottom:12px;font-size:12px;font-weight:600;text-align:center"></div>
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);border-radius:12px 12px 0 0;overflow:hidden;overflow-x:auto;scrollbar-width:none">
         <div class="padm-tab active" onclick="switchProfileAdminTab(0,this)">Products</div>
@@ -308,9 +306,7 @@
         <!-- SYNC TAB -->
         <div class="padm-panel" id="padm-panel-6" style="padding:12px">
           <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">☁️ Cloud Sync Settings</div>
-          <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:14px">
-            When cloud sync is enabled, every save you make is pushed to all users in real time. Users load the shared config on startup instead of relying on their own device.
-          </div>
+          <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:14px">When cloud sync is enabled, every save you make is pushed to all users in real time.</div>
           <div id="sync-current-status" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--gray)">Checking sync status…</div>
           <div class="adm-field"><label>JSONBin Bin ID</label><input id="jsonbin-bin-id" type="text" placeholder="64abc123..."></div>
           <div class="adm-field"><label>JSONBin API Key</label><input id="jsonbin-api-key" type="text" placeholder="$2a$10$..."></div>
@@ -322,10 +318,9 @@
             <b style="color:var(--accent)">How to set up (free, 2 minutes):</b><br>
             1. Go to <b style="color:var(--light)">jsonbin.io</b> and create a free account<br>
             2. Click <b style="color:var(--light)">New Bin</b>, paste <code style="background:var(--card2);padding:1px 4px;border-radius:3px">{}</code>, save it<br>
-            3. Copy the <b style="color:var(--light)">Bin ID</b> from the URL (it looks like <code style="background:var(--card2);padding:1px 4px;border-radius:3px">64a...</code>)<br>
+            3. Copy the <b style="color:var(--light)">Bin ID</b> from the URL<br>
             4. Go to <b style="color:var(--light)">API Keys</b> in your account, create a key<br>
-            5. Paste both here and tap <b style="color:var(--light)">Save Credentials</b><br>
-            6. Then push your config with <b style="color:var(--light)">Push Config to Cloud</b>
+            5. Paste both here and tap <b style="color:var(--light)">Save Credentials</b>
           </div>
           <button class="btn-save" onclick="pushConfigToCloud()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#22c55e,#16a34a)">⬆️ Push Config to Cloud (apply to all users)</button>
           <button class="btn-outline" onclick="pullConfigFromCloud()" style="width:100%;margin-top:8px">⬇️ Pull Latest Config from Cloud</button>
@@ -402,6 +397,9 @@
 </div>
 
 <script>
+
+const VERIFY_WORKER_URL = "https://ancient-mud-9bee.amantifekede14.workers.dev";
+
 // ═══════════════════════════════════════════
 // DEFAULT CONFIG
 // ═══════════════════════════════════════════
@@ -725,28 +723,16 @@ function mergeLeagues(saved, defaults) {
 }
 
 // ── CLOUD SYNC (JSONBin) ──────────────────────────
-// JSONBin.io is a free JSON storage API. Admin sets Bin ID + API Key once.
-// On startup, all users fetch the shared config. On admin save, config is pushed to the bin.
-// Credentials are stored only in the admin's localStorage (never sent to other users).
-
 const JBIN_CREDS_KEY = 'emartzon_jbin';
-
-function getJBinCreds(){
-  try{ return JSON.parse(localStorage.getItem(JBIN_CREDS_KEY)||'null'); }catch(e){ return null; }
-}
-function hasCloudSync(){
-  const c=getJBinCreds(); return !!(c&&c.binId&&c.apiKey);
-}
+function getJBinCreds(){ try{ return JSON.parse(localStorage.getItem(JBIN_CREDS_KEY)||'null'); }catch(e){ return null; } }
+function hasCloudSync(){ const c=getJBinCreds(); return !!(c&&c.binId&&c.apiKey); }
 
 async function fetchCloudConfig(){
   const c=getJBinCreds(); if(!c||!c.binId) return null;
   try{
-    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}/latest`,{
-      headers:{'X-Master-Key':c.apiKey,'X-Bin-Meta':'false'}
-    });
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}/latest`,{headers:{'X-Master-Key':c.apiKey,'X-Bin-Meta':'false'}});
     if(!res.ok) return null;
     const data=await res.json();
-    // JSONBin wraps in {record:...} for meta requests; with X-Bin-Meta:false it returns data directly
     return (typeof data==='object'&&data!==null&&!Array.isArray(data)&&Object.keys(data).length>2)?data:null;
   }catch(e){ return null; }
 }
@@ -755,11 +741,7 @@ async function pushCloudConfig(showMsg=true){
   const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
   setSyncStatus('⏳ Syncing to cloud…','#f5a623');
   try{
-    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},
-      body:JSON.stringify(cfg)
-    });
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(cfg)});
     if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); return true; }
     else{ setSyncStatus('❌ Sync failed — check your credentials','#ef4444'); showMsg&&showToast('Sync failed. Check your Bin ID & API key.'); return false; }
   }catch(e){ setSyncStatus('❌ Network error during sync','#ef4444'); showMsg&&showToast('Network error during sync'); return false; }
@@ -767,13 +749,8 @@ async function pushCloudConfig(showMsg=true){
 
 function setSyncStatus(msg,color){
   const el=document.getElementById('sync-status-bar'); if(!el) return;
-  el.style.display='block';
-  el.style.background=color+'22';
-  el.style.border=`1px solid ${color}55`;
-  el.style.color=color;
-  el.textContent=msg;
-  clearTimeout(el._t);
-  if(color==='#22c55e') el._t=setTimeout(()=>{ el.style.display='none'; },5000);
+  el.style.display='block'; el.style.background=color+'22'; el.style.border=`1px solid ${color}55`; el.style.color=color; el.textContent=msg;
+  clearTimeout(el._t); if(color==='#22c55e') el._t=setTimeout(()=>{ el.style.display='none'; },5000);
 }
 
 function saveJsonBinCredentials(){
@@ -781,7 +758,6 @@ function saveJsonBinCredentials(){
   const apiKey=(document.getElementById('jsonbin-api-key-setup')?.value||document.getElementById('jsonbin-api-key')?.value||'').trim();
   if(!binId||!apiKey){ showToast('Enter both Bin ID and API Key'); return; }
   localStorage.setItem(JBIN_CREDS_KEY,JSON.stringify({binId,apiKey}));
-  // Fill both inputs
   ['jsonbin-bin-id','jsonbin-bin-id-setup'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=binId; });
   ['jsonbin-api-key','jsonbin-api-key-setup'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=apiKey; });
   document.getElementById('jsonbin-setup-notice')?.style?.display && (document.getElementById('jsonbin-setup-notice').style.display='none');
@@ -797,24 +773,19 @@ async function testJsonBinConnection(){
   else{ setSyncStatus('❌ Connection failed — check credentials','#ef4444'); }
 }
 
-async function pushConfigToCloud(){
-  await pushCloudConfig(true);
-}
+async function pushConfigToCloud(){ await pushCloudConfig(true); }
 
 async function pullConfigFromCloud(){
   const remote=await fetchCloudConfig();
   if(!remote){ showToast('Could not fetch config from cloud'); return; }
-  applyRemoteConfig(remote);
-  showToast('Latest config pulled from cloud ✅');
+  applyRemoteConfig(remote); showToast('Latest config pulled from cloud ✅');
 }
 
 function applyRemoteConfig(remote){
-  const localOwner=cfg.ownerTelegramId;
-  const localAdmins=cfg.adminIds||[];
+  const localOwner=cfg.ownerTelegramId; const localAdmins=cfg.adminIds||[];
   cfg=Object.assign({},DEFAULT_CONFIG,remote);
   cfg.leagues=mergeLeagues(remote.leagues,DEFAULT_CONFIG.leagues);
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
-  // Never overwrite ownership from remote on the owner's own device
   if(tgUser&&isOwner()&&localOwner){ cfg.ownerTelegramId=localOwner; cfg.adminIds=localAdmins; }
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
@@ -823,37 +794,20 @@ function applyRemoteConfig(remote){
 function updateSyncStatusPanel(){
   const el=document.getElementById('sync-current-status'); if(!el) return;
   const c=getJBinCreds();
-  if(c&&c.binId&&c.apiKey){
-    el.innerHTML=`<span style="color:#22c55e;font-weight:700">☁️ Cloud Sync ENABLED</span><br>Bin: <code style="background:var(--card);padding:1px 5px;border-radius:4px">${c.binId}</code><br>Every save pushes to all users automatically.`;
-  } else {
-    el.innerHTML=`<span style="color:#f5a623;font-weight:700">⚠️ Cloud Sync NOT configured</span><br>Your changes only apply to your device.`;
-  }
-  // Populate inputs
+  if(c&&c.binId&&c.apiKey){ el.innerHTML=`<span style="color:#22c55e;font-weight:700">☁️ Cloud Sync ENABLED</span><br>Bin: <code style="background:var(--card);padding:1px 5px;border-radius:4px">${c.binId}</code><br>Every save pushes to all users automatically.`; }
+  else { el.innerHTML=`<span style="color:#f5a623;font-weight:700">⚠️ Cloud Sync NOT configured</span><br>Your changes only apply to your device.`; }
   if(c){ ['jsonbin-bin-id','jsonbin-bin-id-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.binId||''; }); ['jsonbin-api-key','jsonbin-api-key-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.apiKey||''; }); }
 }
 
-// ── MODIFIED save() — also pushes to cloud ────────
 let savedCfg=JSON.parse(localStorage.getItem('emartzon_cfg')||'null');
 let cfg;
-if(savedCfg){
-  cfg=Object.assign({},DEFAULT_CONFIG,savedCfg);
-  cfg.leagues=mergeLeagues(savedCfg.leagues,DEFAULT_CONFIG.leagues);
-  if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
-} else {
-  cfg=deepClone(DEFAULT_CONFIG);
-}
+if(savedCfg){ cfg=Object.assign({},DEFAULT_CONFIG,savedCfg); cfg.leagues=mergeLeagues(savedCfg.leagues,DEFAULT_CONFIG.leagues); if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment); }
+else { cfg=deepClone(DEFAULT_CONFIG); }
 
 // ── CART PERSISTENCE ──────────────────────────────
 function cartKey(){ return tgUser ? 'emartzon_cart_'+String(tgUser.id) : null; }
-function loadCart(){
-  const k=cartKey(); if(!k) return;
-  try{ const saved=localStorage.getItem(k); if(saved) cart=JSON.parse(saved); } catch(e){ cart=[]; }
-  updateBadge();
-}
-function saveCart(){
-  const k=cartKey(); if(!k) return;
-  localStorage.setItem(k,JSON.stringify(cart));
-}
+function loadCart(){ const k=cartKey(); if(!k) return; try{ const saved=localStorage.getItem(k); if(saved) cart=JSON.parse(saved); } catch(e){ cart=[]; } updateBadge(); }
+function saveCart(){ const k=cartKey(); if(!k) return; localStorage.setItem(k,JSON.stringify(cart)); }
 
 // ── TRANSACTION PROOF ─────────────────────────────
 function getUsedTxns(){ try{ return JSON.parse(localStorage.getItem('emartzon_used_txns')||'[]'); }catch(e){ return []; } }
@@ -878,51 +832,169 @@ function showTxnProofScreen(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-checkout').classList.add('active');
   document.getElementById('main-hdr').style.display='none';
+  const accentColor=isT?'#a78bfa':'#4CAF50';
+  const providerName=isT?'Telebirr':'CBE Birr';
+  const exampleUrl=isT?'https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX':'https://cbebirr.com/receipt/...';
+  const howToSteps=isT
+    ?'1. Open <b>Telebirr</b> app → tap the transfer you just made<br>2. Tap <b>Share / Receipt</b> then copy the link'
+    :'1. Open <b>CBE Birr</b> app → tap the transfer<br>2. Tap <b>Share Receipt</b> then copy the link';
+  const acctNum=isT?(cfg.payment?.telebirrNum||'—'):(cfg.payment?.cbeNum||'—');
+  const acctName=isT?(cfg.payment?.telebirrName||cfg.storeName):(cfg.payment?.cbeName||cfg.storeName);
+  const logoBg=isT?'linear-gradient(135deg,#6610f2,#9b42e8)':'#006937';
+  const logoText=isT?'tele<br>birr':'CBE';
   document.getElementById('checkout-scroll').innerHTML=`
     <div style="height:20px"></div>
-    <div style="margin:0 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px">
-      <div style="background:linear-gradient(135deg,rgba(245,166,35,.15),rgba(245,166,35,.05));padding:16px 16px 14px;border-bottom:1px solid var(--border)">
-        <div style="font-size:22px;margin-bottom:8px">${isT?'📱':'🏦'}</div>
-        <div style="font-size:15px;font-weight:800;margin-bottom:4px">Confirm Your Payment</div>
-        <div style="font-size:12px;color:var(--gray);line-height:1.5">Paste your <b style="color:var(--white)">${isT?'Telebirr':'CBE Birr'}</b> transaction link to verify your transfer of <b style="color:var(--accent)">${p.totalFmt}</b>.</div>
-      </div>
-      <div style="padding:16px">
-        <div style="background:${isT?'rgba(167,139,250,.08)':'rgba(0,105,55,.1)'};border:1px solid ${isT?'rgba(167,139,250,.2)':'rgba(0,105,55,.25)'};border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:12px;line-height:1.7;color:var(--gray)">
-          <b style="color:${isT?'#a78bfa':'#4CAF50'}">${isT?'📱 How to get your Telebirr receipt link:':'🏦 How to get your CBE Birr receipt link:'}</b><br>
-          1. Open your ${isT?'Telebirr':'CBE Birr'} app → tap the transfer you just made<br>
-          2. Tap <b>${isT?'Share / Receipt':'Share Receipt'}</b> and copy the link<br>
-          <span style="font-family:monospace;font-size:10px;color:var(--light);word-break:break-all">${isT?'https://transactioninfo.ethiotelecom.et/receipt/XXXXXXXX':'https://cbebirr.com/receipt/...'}</span>
+    <div style="margin:0 14px 14px;background:linear-gradient(135deg,rgba(245,166,35,.15),rgba(245,166,35,.05));border:1px solid rgba(245,166,35,.25);border-radius:16px;padding:18px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Amount to Transfer</div>
+      <div style="font-size:32px;font-weight:900;color:var(--accent);letter-spacing:-1px">${p.totalFmt}</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:4px">via <b style="color:var(--white)">${providerName}</b></div>
+    </div>
+    <div style="margin:0 14px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px">Send To This Account</div>
+      <div style="padding:13px 14px;display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:${logoBg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;text-align:center;line-height:1.2">${logoText}</div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:800;font-family:monospace;letter-spacing:.5px;color:var(--white)">${acctNum}</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:2px">${acctName}</div>
         </div>
-        <div class="inp-group" style="margin-bottom:16px">
-          <label style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;color:var(--light)">Transaction Receipt Link</label>
-          <input type="url" id="txn-url-input"
-            placeholder="${isT?'https://transactioninfo.ethiotelecom.et/receipt/...':'https://cbebirr.com/receipt/...'}"
-            style="width:100%;box-sizing:border-box;background:var(--card2);border:1.5px solid var(--border);color:var(--white);padding:12px;border-radius:10px;font-size:13px;outline:none;font-family:monospace"
-            oninput="document.getElementById('txn-err').textContent='';this.style.borderColor='var(--border)'">
-          <div id="txn-err" style="font-size:11px;color:#ef4444;margin-top:6px;line-height:1.4;white-space:pre-wrap"></div>
-        </div>
-        <button onclick="submitTxnProof()" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">
-          ✅ Verify &amp; Complete Order
-        </button>
-        <div onclick="cancelTxnProof()" style="text-align:center;margin-top:12px;font-size:13px;color:var(--gray);cursor:pointer;padding:8px">
-          ← Go back to checkout
-        </div>
+        <button onclick="copyToClipboard('${acctNum}')" style="background:var(--card2);border:1px solid var(--border);color:var(--white);padding:7px 11px;border-radius:8px;font-size:12px;cursor:pointer">📋 Copy</button>
       </div>
     </div>
+    <div style="margin:0 14px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px">How to get your receipt link</div>
+      <div style="padding:13px 14px;font-size:12px;color:var(--gray);line-height:1.9">
+        <span style="color:${accentColor};font-weight:700">📱 ${providerName}</span><br>
+        ${howToSteps}<br>
+        <span style="font-family:monospace;font-size:10px;color:var(--light);word-break:break-all">${exampleUrl}</span>
+      </div>
+    </div>
+    <div style="margin:0 14px 6px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px">
+      <label style="font-size:12px;font-weight:700;color:var(--light);display:block;margin-bottom:8px">Paste Your Receipt Link</label>
+      <input type="url" id="txn-url-input" placeholder="${exampleUrl}"
+        style="width:100%;box-sizing:border-box;background:var(--card2);border:1.5px solid var(--border);color:var(--white);padding:12px;border-radius:10px;font-size:12px;outline:none;font-family:monospace;transition:border-color .2s"
+        oninput="document.getElementById('txn-err').style.display='none';this.style.borderColor='var(--border)'">
+      <div id="txn-err" style="display:none;margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px">
+        <div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:4px" id="txn-err-title">Verification Failed</div>
+        <div style="font-size:12px;color:var(--gray);line-height:1.6;white-space:pre-wrap" id="txn-err-msg"></div>
+        <div id="txn-partial-info" style="display:none;margin-top:10px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:10px">
+          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">💰 Partial Payment Detected</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+            <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Order Total</div><div style="font-weight:700;color:var(--white)" id="txn-partial-total">—</div></div>
+            <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">You Sent</div><div style="font-weight:700;color:#ef4444" id="txn-partial-sent">—</div></div>
+            <div style="grid-column:span 2;border-top:1px solid var(--border);padding-top:8px;margin-top:2px">
+              <div style="color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Still Remaining</div>
+              <div style="font-weight:900;color:var(--accent);font-size:18px" id="txn-partial-remaining">—</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-top:8px;line-height:1.5;border-top:1px solid var(--border);padding-top:8px">Please send the remaining amount to the same account, then paste the new receipt link here.</div>
+        </div>
+      </div>
+      <div id="txn-verifying" style="display:none;margin-top:12px;text-align:center;padding:14px 0">
+        <div style="font-size:26px;margin-bottom:8px">🔍</div>
+        <div style="font-size:13px;font-weight:700;color:var(--light)">Verifying your payment…</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:4px;margin-bottom:12px">Checking amount · recipient · status</div>
+        <div style="height:3px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--accent);border-radius:3px;animation:txn-progress 1.8s ease-in-out infinite"></div></div>
+      </div>
+      <div id="txn-success-state" style="display:none;margin-top:12px;text-align:center;padding:14px 0">
+        <div style="font-size:40px;margin-bottom:8px">✅</div>
+        <div style="font-size:15px;font-weight:800;color:#22c55e">Payment Verified!</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:4px">Completing your order…</div>
+      </div>
+    </div>
+    <div style="margin:0 14px 20px">
+      <button id="txn-verify-btn" onclick="submitTxnProof()" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .2s">
+        🔍 Verify &amp; Complete Order
+      </button>
+      <div onclick="cancelTxnProof()" style="text-align:center;margin-top:12px;font-size:13px;color:var(--gray);cursor:pointer;padding:6px">← Go back to checkout</div>
+    </div>
+    <style>@keyframes txn-progress{0%{width:0%;margin-left:0}50%{width:70%;margin-left:0}100%{width:0%;margin-left:100%}}</style>
     <div style="height:20px"></div>`;
 }
 
-function submitTxnProof(){
+async function submitTxnProof(){
   const url=(document.getElementById('txn-url-input')?.value||'').trim();
-  const errEl=document.getElementById('txn-err');
+  const errBox=document.getElementById('txn-err');
+  const verifying=document.getElementById('txn-verifying');
+  const successEl=document.getElementById('txn-success-state');
+  const btn=document.getElementById('txn-verify-btn');
   const inp=document.getElementById('txn-url-input');
-  if(!url){ errEl.textContent='Please paste your transaction receipt link.'; inp.style.borderColor='#ef4444'; return; }
-  if(isTxnUsed(url)){ errEl.textContent='❌ This transaction link has already been used for a previous order.\nEach transaction can only be used once.'; inp.style.borderColor='#ef4444'; return; }
-  const err=validateTxnUrl(url,_pendingOrder?.rawPayment);
-  if(err){ errEl.textContent='❌ '+err; inp.style.borderColor='#ef4444'; return; }
+  errBox.style.display='none';
+  document.getElementById('txn-partial-info').style.display='none';
+  verifying.style.display='none';
+  successEl.style.display='none';
+  if(!url){ showTxnError('Please paste your receipt link.',null,null); inp.style.borderColor='#ef4444'; return; }
+  if(!url.startsWith('http')){ showTxnError('The link must start with https://',null,null); inp.style.borderColor='#ef4444'; return; }
+  if(isTxnUsed(url)){ showTxnError('This receipt link was already used for a previous order.\nEach transaction link can only be used once.',null,null); inp.style.borderColor='#ef4444'; return; }
+  const fmtErr=validateTxnUrl(url,_pendingOrder?.rawPayment);
+  if(fmtErr){ showTxnError(fmtErr,null,null); inp.style.borderColor='#ef4444'; return; }
+  btn.disabled=true; btn.style.opacity='0.5';
+  inp.style.borderColor='var(--accent)';
+  verifying.style.display='block';
+  let result;
+  try{
+    const res=await fetch(VERIFY_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    result=await res.json();
+  }catch(e){
+    verifying.style.display='none'; btn.disabled=false; btn.style.opacity='1';
+    showTxnError('Could not reach the verification server.\nCheck your internet connection and try again.',null,null); return;
+  }
+  verifying.style.display='none'; btn.disabled=false; btn.style.opacity='1';
+  if(!result.ok){ showTxnError(result.error||'Verification failed. Please try again.',null,null); inp.style.borderColor='#ef4444'; return; }
+  if(result.status&&!['success','completed','approved','successful'].includes(result.status.toLowerCase())){
+    showTxnError(`Your transaction status is "${result.status}".\nOnly completed transactions are accepted.`,null,null); inp.style.borderColor='#ef4444'; return;
+  }
+  const pay=cfg.payment||DEFAULT_CONFIG.payment;
+  const isT=_pendingOrder?.rawPayment==='telebirr';
+  const expectedRaw=isT?(pay.telebirrNum||''):(pay.cbeNum||'');
+  if(result.receiver&&expectedRaw){
+    const norm=s=>s.replace(/[\s\+]/g,'').replace(/^251/,'').replace(/^0/,'');
+    const expN=norm(expectedRaw); const recN=norm(result.receiver);
+    if(expN&&recN&&!recN.includes(expN)&&!expN.includes(recN)){
+      showTxnError(`This receipt shows payment to a different account.\n\nExpected: ${expectedRaw}\nReceipt:  ${result.receiver}\n\nPlease send to the correct account and paste the new receipt.`,null,null);
+      inp.style.borderColor='#ef4444'; return;
+    }
+  }
+  const orderTotal=_pendingOrder?.total||0;
+  if(result.amount!=null){
+    const TOLERANCE=1;
+    if(result.amount<orderTotal-TOLERANCE){
+      inp.style.borderColor='#ef4444';
+      showTxnError('The transferred amount is less than your order total.',orderTotal,result.amount);
+      document.getElementById('txn-partial-total').textContent=fmt(orderTotal);
+      document.getElementById('txn-partial-sent').textContent=fmt(result.amount);
+      document.getElementById('txn-partial-remaining').textContent=fmt(orderTotal-result.amount);
+      document.getElementById('txn-partial-info').style.display='block'; return;
+    }
+    if(result.amount>orderTotal+500){
+      showTxnError(`⚠️ You sent more than the order total.\n\nOrder total: ${fmt(orderTotal)}\nAmount sent: ${fmt(result.amount)}\nDifference:  ${fmt(result.amount-orderTotal)}\n\nYour order will be processed and the overpaid amount will be refunded. Tap the button again to confirm.`,null,null);
+      btn.onclick=()=>finalizeTxn(url); btn.textContent='✅ Confirm & Complete Order'; btn.style.display='block'; return;
+    }
+  }
+  finalizeTxn(url);
+}
+
+function finalizeTxn(url){
+  const successEl=document.getElementById('txn-success-state');
+  const btn=document.getElementById('txn-verify-btn');
+  const inp=document.getElementById('txn-url-input');
+  const errBox=document.getElementById('txn-err');
+  if(errBox) errBox.style.display='none';
+  if(inp) inp.style.borderColor='#22c55e';
+  if(successEl) successEl.style.display='block';
+  if(btn) btn.style.display='none';
   markTxnUsed(url);
   _pendingOrder.txnUrl=url;
-  completeOrder(_pendingOrder);
+  setTimeout(()=>completeOrder(_pendingOrder),1200);
+}
+
+function showTxnError(msg,orderTotal,sentAmount){
+  const errBox=document.getElementById('txn-err');
+  const errTitle=document.getElementById('txn-err-title');
+  const errMsg=document.getElementById('txn-err-msg');
+  if(!errBox) return;
+  errTitle.textContent=(sentAmount!=null)?'Insufficient Amount':'Verification Failed';
+  errMsg.textContent=msg;
+  errBox.style.display='block';
 }
 
 function cancelTxnProof(){ _pendingOrder=null; showCheckout(); }
@@ -935,11 +1007,7 @@ let shopState={leagueId:'all',teamId:null,kitFilter:'all'};
 let modalCtx=null;
 let tgUser=null;
 
-// save() now also syncs to cloud if configured
-function save(){
-  localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
-  if(hasCloudSync()) pushCloudConfig(false);
-}
+function save(){ localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); if(hasCloudSync()) pushCloudConfig(false); }
 function saveOrders(){ localStorage.setItem('emartzon_orders',JSON.stringify(orderHistory)); }
 function fmt(n){ return cfg.currencyPos==='after'?n.toLocaleString()+' '+cfg.currency:cfg.currency+' '+n.toLocaleString(); }
 function isOwner(){ if(!tgUser) return false; if(!cfg.ownerTelegramId) return true; return String(tgUser.id)===String(cfg.ownerTelegramId); }
@@ -955,11 +1023,8 @@ async function initLogin(){
   else { li.textContent=cfg.logoEmoji||'⚽'; }
   document.getElementById('login-brand-name').innerHTML=`${cfg.brandName1||'emart'}<span>${cfg.brandName2||'zon'}</span>`;
   document.getElementById('login-tagline').textContent=cfg.storeSub||'Official Football Jerseys';
-
-  // Try to fetch remote config for all users on startup
   const remote=await fetchCloudConfig();
   if(remote){ applyRemoteConfig(remote); }
-
   function tryTelegram(){
     try{
       const tg=window.Telegram?.WebApp;
@@ -983,11 +1048,7 @@ function showTgUser(u){
   const ini=((u.first_name||'?')[0]+(u.last_name?u.last_name[0]:'')).toUpperCase();
   if(u.photo_url){ av.innerHTML=`<img src="${u.photo_url}" onerror="this.parentNode.textContent='${ini}'">` } else { av.textContent=ini; }
 }
-function showNotTelegram(){
-  document.getElementById('login-loading').style.display='none';
-  document.getElementById('login-tg-found').style.display='none';
-  document.getElementById('login-notg').style.display='block';
-}
+function showNotTelegram(){ document.getElementById('login-loading').style.display='none'; document.getElementById('login-tg-found').style.display='none'; document.getElementById('login-notg').style.display='block'; }
 function enterPreviewMode(){
   tgUser={id:'guest_'+Date.now(),first_name:'Guest',last_name:'',username:null,language_code:'en'};
   const s=document.getElementById('login-screen'); s.style.transition='opacity .3s'; s.style.opacity='0';
@@ -999,8 +1060,7 @@ function enterApp(){
   setTimeout(()=>{ s.style.display='none'; bootApp(); },350);
 }
 function bootApp(){
-  claimOwnership();
-  loadCart();
+  claimOwnership(); loadCart();
   renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
   renderShipOpts(); renderPickupCard();
   curShipping=cfg.shipping[0];
@@ -1044,20 +1104,10 @@ function kitIcon(t){ return {'Home Kit':'🏠','Away Kit':'✈️','Third Kit':'
 
 function renderLeagueTabs(){
   const bar=document.getElementById('cats-bar');
-  bar.innerHTML=`<div class="cat-btn active" onclick="selectLeague('all',this)">⚽ All Teams</div>`
-    +cfg.leagues.map(l=>`<div class="cat-btn" onclick="selectLeague('${l.id}',this)">${l.emoji} ${l.label}</div>`).join('');
+  bar.innerHTML=`<div class="cat-btn active" onclick="selectLeague('all',this)">⚽ All Teams</div>`+cfg.leagues.map(l=>`<div class="cat-btn" onclick="selectLeague('${l.id}',this)">${l.emoji} ${l.label}</div>`).join('');
 }
-function selectLeague(id,el){
-  document.querySelectorAll('#cats-bar .cat-btn').forEach(b=>b.classList.remove('active'));
-  if(el) el.classList.add('active');
-  shopState={leagueId:id,teamId:null,kitFilter:'all'};
-  renderShopGrid(); updateBreadcrumb(); updateShopTitle();
-}
-function selectTeam(lid,tid){
-  shopState={leagueId:lid,teamId:tid,kitFilter:'all'};
-  renderShopGrid(); updateBreadcrumb(); updateShopTitle();
-  document.querySelector('.scroll').scrollTop=0;
-}
+function selectLeague(id,el){ document.querySelectorAll('#cats-bar .cat-btn').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); shopState={leagueId:id,teamId:null,kitFilter:'all'}; renderShopGrid(); updateBreadcrumb(); updateShopTitle(); }
+function selectTeam(lid,tid){ shopState={leagueId:lid,teamId:tid,kitFilter:'all'}; renderShopGrid(); updateBreadcrumb(); updateShopTitle(); document.querySelector('.scroll').scrollTop=0; }
 function backToLeague(){ shopState.teamId=null; shopState.kitFilter='all'; renderShopGrid(); updateBreadcrumb(); updateShopTitle(); }
 function filterKitType(type){ shopState.kitFilter=type; renderShopGrid(); }
 function updateShopTitle(){
@@ -1081,16 +1131,12 @@ function updateBreadcrumb(){
   bc.innerHTML=parts.join('');
 }
 function findTeam(lid,tid){ return (cfg.leagues.find(l=>l.id===lid)?.teams||[]).find(t=>t.id===tid)||null; }
-function findProduct(pid){
-  for(const lg of cfg.leagues) for(const team of (lg.teams||[])) for(const p of (team.products||[])) if(p.id===pid) return {p,team,lg};
-  return null;
-}
+function findProduct(pid){ for(const lg of cfg.leagues) for(const team of (lg.teams||[])) for(const p of (team.products||[])) if(p.id===pid) return {p,team,lg}; return null; }
 
 function renderShopGrid(query=''){
   const st=shopState; const grid=document.getElementById('products-grid');
   if(st.teamId){
-    const team=findTeam(st.leagueId,st.teamId);
-    const lg=cfg.leagues.find(l=>l.id===st.leagueId);
+    const team=findTeam(st.leagueId,st.teamId); const lg=cfg.leagues.find(l=>l.id===st.leagueId);
     if(!team){ grid.innerHTML=''; return; }
     let items=team.products||[];
     if(st.kitFilter!=='all') items=items.filter(p=>p.kitType===st.kitFilter);
@@ -1196,19 +1242,8 @@ function openDetail(pid){
 function detGoBack(){ showPage('shop'); }
 function selSz(s,el){ selSize=s; document.querySelectorAll('.sz-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
 function chgQty(d){ selQty=Math.max(1,selQty+d); document.getElementById('qty-disp').textContent=selQty; }
-function addToCart(){
-  const ex=cart.find(i=>i.id===curProduct.id&&i.size===selSize);
-  if(ex) ex.qty+=selQty; else cart.push({...curProduct,size:selSize,qty:selQty});
-  saveCart(); updateBadge(); showToast('Added to cart! 🛒');
-}
-function quickAdd(pid){
-  const found=findProduct(pid); if(!found) return;
-  const {p,team}=found; const name=`${team.name} ${p.kitType}`;
-  const item={...p,name,teamName:team.name,size:cfg.sizes[2]||'M',qty:1};
-  const ex=cart.find(i=>i.id===p.id&&i.size===item.size);
-  if(ex) ex.qty++; else cart.push(item);
-  saveCart(); updateBadge(); showToast(`${name} added! 🛒`);
-}
+function addToCart(){ const ex=cart.find(i=>i.id===curProduct.id&&i.size===selSize); if(ex) ex.qty+=selQty; else cart.push({...curProduct,size:selSize,qty:selQty}); saveCart(); updateBadge(); showToast('Added to cart! 🛒'); }
+function quickAdd(pid){ const found=findProduct(pid); if(!found) return; const {p,team}=found; const name=`${team.name} ${p.kitType}`; const item={...p,name,teamName:team.name,size:cfg.sizes[2]||'M',qty:1}; const ex=cart.find(i=>i.id===p.id&&i.size===item.size); if(ex) ex.qty++; else cart.push(item); saveCart(); updateBadge(); showToast(`${name} added! 🛒`); }
 function updateBadge(){ const n=cart.reduce((a,i)=>a+i.qty,0); const b=document.getElementById('cart-badge'); b.textContent=n; b.style.display=n>0?'flex':'none'; }
 
 // ── SHIPPING ──────────────────────────────────────
@@ -1229,8 +1264,7 @@ function selShip(id){
   const isPickup=curShipping?.id==='pickup';
   document.getElementById('addr-form-wrap').style.display=isPickup?'none':'block';
   document.getElementById('pickup-info-wrap').style.display=isPickup?'block':'none';
-  if(isPickup){ selectPayment('cash'); }
-  else if(selectedPayment==='cash'){ selectPayment('cbe'); }
+  if(isPickup){ selectPayment('cash'); } else if(selectedPayment==='cash'){ selectPayment('cbe'); }
   updateCheckoutSummary();
 }
 function renderPickupCard(){
@@ -1247,8 +1281,7 @@ function selectPayment(method){
   document.querySelectorAll('.pay-opt').forEach(el=>el.classList.remove('selected'));
   const map={cbe:'pay-cbe',telebirr:'pay-telebirr',cash:'pay-pickup-cash'};
   if(map[method]) document.getElementById(map[method]).classList.add('selected');
-  renderPaymentInstructions(method);
-  updateCheckoutSummary();
+  renderPaymentInstructions(method); updateCheckoutSummary();
 }
 
 function renderPaymentInstructions(method){
@@ -1298,10 +1331,7 @@ function renderPaymentInstructions(method){
   }
 }
 
-function copyToClipboard(text){
-  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>showToast('Copied! 📋')); }
-  else { showToast(text); }
-}
+function copyToClipboard(text){ if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>showToast('Copied! 📋')); } else { showToast(text); } }
 
 // ── CART ──────────────────────────────────────────
 function showCart(){
@@ -1309,8 +1339,7 @@ function showCart(){
   if(!cart.length){
     con.innerHTML=`<div class="empty"><div class="empty-icon">🛒</div><h3>Cart is empty</h3><p>Add some jerseys to your cart!</p><button class="cta-btn" style="width:auto;padding:11px 22px;margin:0" onclick="goShop()">Browse Jerseys</button></div>`;
   } else {
-    const sub=cart.reduce((a,i)=>a+i.price*i.qty,0);
-    const ship=(curShipping||cfg.shipping[0])?.price||0;
+    const sub=cart.reduce((a,i)=>a+i.price*i.qty,0); const ship=(curShipping||cfg.shipping[0])?.price||0;
     con.innerHTML=`<div style="height:12px"></div>
       <div style="padding:0 14px">${cart.map((item,idx)=>`
         <div class="cart-item">
@@ -1335,16 +1364,9 @@ function showCart(){
 function rmItem(idx){ cart.splice(idx,1); saveCart(); updateBadge(); showCart(); }
 
 // ── CHECKOUT ──────────────────────────────────────
-function showCheckout(){
-  if(!curShipping) curShipping=cfg.shipping[0];
-  renderShipOpts();
-  selectPayment(selectedPayment);
-  updateCheckoutSummary();
-  showPage('checkout');
-}
+function showCheckout(){ if(!curShipping) curShipping=cfg.shipping[0]; renderShipOpts(); selectPayment(selectedPayment); updateCheckoutSummary(); showPage('checkout'); }
 function updateCheckoutSummary(){
-  const sub=cart.reduce((a,i)=>a+i.price*i.qty,0);
-  const ship=(curShipping||cfg.shipping[0])?.price||0;
+  const sub=cart.reduce((a,i)=>a+i.price*i.qty,0); const ship=(curShipping||cfg.shipping[0])?.price||0;
   const payLabels={cbe:'CBE Birr',telebirr:'Telebirr',cash:'Pay at Store'};
   document.getElementById('checkout-summary-box').innerHTML=`
     <div class="sum-row"><span>Items (${cart.reduce((a,i)=>a+i.qty,0)})</span><span>${fmt(sub)}</span></div>
@@ -1355,89 +1377,56 @@ function updateCheckoutSummary(){
 
 // ── PLACE ORDER & RECEIPT ─────────────────────────
 function placeOrder(){
-  const sub=cart.reduce((a,i)=>a+i.price*i.qty,0);
-  const ship=(curShipping||cfg.shipping[0])?.price||0;
-  const total=sub+ship;
+  const sub=cart.reduce((a,i)=>a+i.price*i.qty,0); const ship=(curShipping||cfg.shipping[0])?.price||0; const total=sub+ship;
   const m=curShipping||cfg.shipping[0];
   const buyer=tgUser?[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '):'Guest';
   const phone=document.getElementById('inp-phone')?.value||cfg.phone;
-  const address=document.getElementById('inp-address')?.value||'';
-  const city=document.getElementById('inp-city')?.value||'';
-  const payMethods={cbe:'CBE Birr',telebirr:'Telebirr',cash:'Pay at Store'};
-  const payMethod=payMethods[selectedPayment]||selectedPayment;
+  const address=document.getElementById('inp-address')?.value||''; const city=document.getElementById('inp-city')?.value||'';
+  const payMethods={cbe:'CBE Birr',telebirr:'Telebirr',cash:'Pay at Store'}; const payMethod=payMethods[selectedPayment]||selectedPayment;
   if(selectedPayment==='cbe'||selectedPayment==='telebirr'){
-    showTxnProofScreen({rawPayment:selectedPayment,paymentMethod:payMethod,totalFmt:fmt(total),sub,ship,total,buyer,phone,address,city,m:deepClone(m),cartSnapshot:deepClone(cart),txnUrl:null});
-    return;
+    showTxnProofScreen({rawPayment:selectedPayment,paymentMethod:payMethod,totalFmt:fmt(total),sub,ship,total,buyer,phone,address,city,m:deepClone(m),cartSnapshot:deepClone(cart),txnUrl:null}); return;
   }
   completeOrder({rawPayment:'cash',paymentMethod:payMethod,totalFmt:fmt(total),sub,ship,total,buyer,phone,address,city,m:deepClone(m),cartSnapshot:deepClone(cart),txnUrl:null});
 }
 
 function completeOrder(o){
-  const {sub,ship,total,m,buyer,phone,address,city,cartSnapshot,txnUrl}=o;
-  const payMethod=o.paymentMethod;
-  const oid='EM'+Date.now().toString().slice(-6);
-  const now=new Date();
+  const {sub,ship,total,m,buyer,phone,address,city,cartSnapshot,txnUrl}=o; const payMethod=o.paymentMethod;
+  const oid='EM'+Date.now().toString().slice(-6); const now=new Date();
   const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-
   const itemsHtml=(cartSnapshot||[]).map(item=>`
     <div class="receipt-item">
       <div class="receipt-item-img">${item.imgUrl?`<img src="${item.imgUrl}" onerror="this.parentNode.textContent='${item.emoji||'⚽'}'">`:item.emoji||'⚽'}</div>
-      <div class="receipt-item-info">
-        <div class="receipt-item-name">${item.name}</div>
-        <div class="receipt-item-meta">Size: ${item.size} · Qty: ${item.qty}</div>
-      </div>
+      <div class="receipt-item-info"><div class="receipt-item-name">${item.name}</div><div class="receipt-item-meta">Size: ${item.size} · Qty: ${item.qty}</div></div>
       <div class="receipt-item-price">${fmt(item.price*item.qty)}</div>
     </div>`).join('');
-
   const payBadgeClass=o.rawPayment==='cbe'?'cbe':o.rawPayment==='telebirr'?'telebirr':'pickup';
-  const payInstr=o.rawPayment==='cbe'
-    ?`Transfer verified via CBE Birr. Order ID: <b>#${oid}</b>.`
-    :o.rawPayment==='telebirr'
-    ?`Transfer verified via Telebirr. Order ID: <b>#${oid}</b>.`
-    :`Pay <b>${fmt(total)}</b> when you pick up your order at the store. Show this receipt.`;
-
-  const txnHtml=txnUrl?`
-    <div class="receipt-section">
-      <div class="receipt-section-title">Payment Proof</div>
-      <div class="receipt-row"><span class="receipt-row-label">Transaction</span><span class="receipt-row-val" style="font-size:11px;word-break:break-all;color:var(--accent)">${txnUrl}</span></div>
-    </div>`:'';
-
+  const payInstr=o.rawPayment==='cbe'?`Transfer verified via CBE Birr. Order ID: <b>#${oid}</b>.`:o.rawPayment==='telebirr'?`Transfer verified via Telebirr. Order ID: <b>#${oid}</b>.`:`Pay <b>${fmt(total)}</b> when you pick up your order at the store. Show this receipt.`;
+  const txnHtml=txnUrl?`<div class="receipt-section"><div class="receipt-section-title">Payment Proof</div><div class="receipt-row"><span class="receipt-row-label">Transaction</span><span class="receipt-row-val" style="font-size:11px;word-break:break-all;color:var(--accent)">${txnUrl}</span></div></div>`:'';
   const deliveryInfo=m?.id==='pickup'
     ?`<div class="receipt-row"><span class="receipt-row-label">Pickup At</span><span class="receipt-row-val">${cfg.storeName}<br><span style="font-size:11px;color:var(--gray)">${cfg.address}</span></span></div><div class="receipt-row"><span class="receipt-row-label">Hours</span><span class="receipt-row-val">${cfg.hours}</span></div>`
     :`<div class="receipt-row"><span class="receipt-row-label">Deliver To</span><span class="receipt-row-val">${city}${address?', '+address:''}</span></div><div class="receipt-row"><span class="receipt-row-label">Contact</span><span class="receipt-row-val">${phone}</span></div>`;
-
   document.getElementById('receipt-card').innerHTML=`
     <div class="receipt-header">
-      <div class="receipt-header-top">
-        <div class="receipt-brand">⚽ ${cfg.storeName}</div>
-        <div class="receipt-num">#${oid}</div>
-      </div>
+      <div class="receipt-header-top"><div class="receipt-brand">⚽ ${cfg.storeName}</div><div class="receipt-num">#${oid}</div></div>
       <div class="receipt-date">${dateStr} at ${timeStr}</div>
     </div>
-    <div class="receipt-section">
-      <div class="receipt-section-title">Customer</div>
+    <div class="receipt-section"><div class="receipt-section-title">Customer</div>
       <div class="receipt-row"><span class="receipt-row-label">Name</span><span class="receipt-row-val">${buyer}</span></div>
       ${tgUser?.username?`<div class="receipt-row"><span class="receipt-row-label">Telegram</span><span class="receipt-row-val">@${tgUser.username}</span></div>`:''}
       ${tgUser?.id?`<div class="receipt-row"><span class="receipt-row-label">User ID</span><span class="receipt-row-val" style="font-family:monospace">${tgUser.id}</span></div>`:''}
     </div>
-    <div class="receipt-section">
-      <div class="receipt-section-title">Items Ordered</div>
-      <div class="receipt-items-list">${itemsHtml}</div>
-    </div>
-    <div class="receipt-section">
-      <div class="receipt-section-title">Pricing</div>
+    <div class="receipt-section"><div class="receipt-section-title">Items Ordered</div><div class="receipt-items-list">${itemsHtml}</div></div>
+    <div class="receipt-section"><div class="receipt-section-title">Pricing</div>
       <div class="receipt-row"><span class="receipt-row-label">Subtotal</span><span class="receipt-row-val">${fmt(sub)}</span></div>
       <div class="receipt-row"><span class="receipt-row-label">Shipping</span><span class="receipt-row-val">${ship===0?'Free':fmt(ship)}</span></div>
       <div class="receipt-row total-row"><span class="receipt-row-label">Total Paid</span><span class="receipt-row-val">${fmt(total)}</span></div>
     </div>
-    <div class="receipt-section">
-      <div class="receipt-section-title">${m?.id==='pickup'?'Store Pickup':'Delivery'}</div>
+    <div class="receipt-section"><div class="receipt-section-title">${m?.id==='pickup'?'Store Pickup':'Delivery'}</div>
       <div class="receipt-row"><span class="receipt-row-label">Method</span><span class="receipt-row-val">${m?.icon} ${m?.name}</span></div>
       ${deliveryInfo}
     </div>
-    <div class="receipt-section">
-      <div class="receipt-section-title">Payment</div>
+    <div class="receipt-section"><div class="receipt-section-title">Payment</div>
       <div class="receipt-row" style="margin-bottom:10px"><span class="receipt-row-label">Method</span><span class="receipt-row-val"><span class="receipt-pay-badge ${payBadgeClass}">${payMethod}</span></span></div>
       <div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:9px;padding:11px;font-size:12px;color:var(--light);line-height:1.6">${payInstr}</div>
     </div>
@@ -1446,17 +1435,12 @@ function completeOrder(o){
       <div style="font-size:11px;color:var(--gray);flex:1;line-height:1.5">Thank you for shopping at ${cfg.storeName}! For help: ${cfg.phone}</div>
       <div style="font-size:22px">🙏</div>
     </div>`;
-
   orderHistory.push({id:oid,userId:tgUser?String(tgUser.id):'guest',date:dateStr,total,itemCount:(cartSnapshot||[]).reduce((a,i)=>a+i.qty,0),method:m?.id||'delivery',methodIcon:m?.icon||'📦',methodName:m?.name||'Delivery',paymentMethod:payMethod,txnUrl:txnUrl||null,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:i.price}))});
   saveOrders();
-
   try{
     const tg=window.Telegram?.WebApp;
-    if(tg&&tg.sendData){
-      tg.sendData(JSON.stringify({type:'order',orderId:oid,buyer,telegramId:tgUser?.id,username:tgUser?.username,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:fmt(i.price*i.qty)})),subtotal:fmt(sub),shipping:ship===0?'Free':fmt(ship),total:fmt(total),delivery:m?.name,paymentMethod:payMethod,txnUrl:txnUrl||null,address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),date:dateStr,time:timeStr}));
-    }
+    if(tg&&tg.sendData){ tg.sendData(JSON.stringify({type:'order',orderId:oid,buyer,telegramId:tgUser?.id,username:tgUser?.username,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:fmt(i.price*i.qty)})),subtotal:fmt(sub),shipping:ship===0?'Free':fmt(ship),total:fmt(total),delivery:m?.name,paymentMethod:payMethod,txnUrl:txnUrl||null,address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),date:dateStr,time:timeStr})); }
   }catch(e){}
-
   cart=[]; saveCart(); updateBadge(); _pendingOrder=null; showPage('success');
 }
 
@@ -1504,21 +1488,14 @@ function showProfile(){
   else { ol.innerHTML=[...uOrders].reverse().map(o=>`<div style="padding:13px 14px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:13px;font-weight:700">#${o.id}</div><div style="font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;background:${o.method==='pickup'?'rgba(46,204,113,.12)':'rgba(245,166,35,.12)'};color:${o.method==='pickup'?'#2ecc71':'var(--accent)'}">${o.methodIcon} ${o.methodName}</div></div><div style="font-size:11px;color:var(--gray);margin-bottom:4px">${o.date} · ${o.itemCount} item${o.itemCount!==1?'s':''} · ${o.paymentMethod||''}</div><div style="font-size:14px;font-weight:700;color:var(--accent)">${fmt(o.total)}</div></div>`).join(''); }
   document.getElementById('profile-admin-section').style.display=isAdmin()?'block':'none';
   document.getElementById('profile-owner-section').style.display=isOwner()?'block':'none';
-  if(isAdmin()){
-    populatePadmForms();
-    updateSyncStatusPanel();
-    // Show setup notice if cloud not configured
-    const notice=document.getElementById('jsonbin-setup-notice');
-    if(notice) notice.style.display=hasCloudSync()?'none':'block';
-  }
+  if(isAdmin()){ populatePadmForms(); updateSyncStatusPanel(); const notice=document.getElementById('jsonbin-setup-notice'); if(notice) notice.style.display=hasCloudSync()?'none':'block'; }
   if(isOwner()){ renderManageAdmins(); const oid=document.getElementById('owner-id-display'); const mid=document.getElementById('owner-my-id-copy'); if(oid) oid.textContent=cfg.ownerTelegramId||String(u.id); if(mid) mid.textContent=String(u.id); }
   setNav('profile'); showPage('profile');
 }
 
 // ── PROFILE ADMIN FORMS ───────────────────────────
 function populatePadmForms(){
-  padmRenderProducts();
-  padmRenderShipping();
+  padmRenderProducts(); padmRenderShipping();
   const pay=cfg.payment||DEFAULT_CONFIG.payment;
   const f={'padm-store-name':cfg.storeName,'padm-store-sub':cfg.storeSub,'padm-phone':cfg.phone,'padm-email':cfg.email,'padm-address':cfg.address,'padm-hours':cfg.hours,'padm-about':cfg.about,'padm-logo-url':cfg.logoUrl,'padm-logo-emoji':cfg.logoEmoji,'padm-brand1':cfg.brandName1,'padm-brand2':cfg.brandName2,'padm-cbe-num':pay.cbeNum,'padm-cbe-name':pay.cbeName,'padm-telebirr-num':pay.telebirrNum,'padm-telebirr-name':pay.telebirrName};
   Object.entries(f).forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
@@ -1578,15 +1555,7 @@ function padmRenderShipping(){
     </div>`).join('');
 }
 function padmAddShipping(){ cfg.shipping.push({id:'ship-'+Date.now(),icon:'📦',name:'New Method',desc:'Description',price:0}); save(); padmRenderShipping(); showToast('Method added'); }
-
-function padmSavePayment(){
-  if(!cfg.payment) cfg.payment={};
-  cfg.payment.cbeNum=document.getElementById('padm-cbe-num').value||'';
-  cfg.payment.cbeName=document.getElementById('padm-cbe-name').value||'';
-  cfg.payment.telebirrNum=document.getElementById('padm-telebirr-num').value||'';
-  cfg.payment.telebirrName=document.getElementById('padm-telebirr-name').value||'';
-  save(); showToast('Payment info saved! ✅');
-}
+function padmSavePayment(){ if(!cfg.payment) cfg.payment={}; cfg.payment.cbeNum=document.getElementById('padm-cbe-num').value||''; cfg.payment.cbeName=document.getElementById('padm-cbe-name').value||''; cfg.payment.telebirrNum=document.getElementById('padm-telebirr-num').value||''; cfg.payment.telebirrName=document.getElementById('padm-telebirr-name').value||''; save(); showToast('Payment info saved! ✅'); }
 function padmSaveStore(){ cfg.storeName=document.getElementById('padm-store-name').value; cfg.storeSub=document.getElementById('padm-store-sub').value; cfg.phone=document.getElementById('padm-phone').value; cfg.email=document.getElementById('padm-email').value; cfg.address=document.getElementById('padm-address').value; cfg.hours=document.getElementById('padm-hours').value; cfg.about=document.getElementById('padm-about').value; save(); renderHeader(); renderPickupCard(); showToast('Store info saved! ✅'); }
 function padmSaveLogo(){ cfg.logoUrl=document.getElementById('padm-logo-url').value; cfg.logoEmoji=document.getElementById('padm-logo-emoji').value||'⚽'; cfg.brandName1=document.getElementById('padm-brand1').value; cfg.brandName2=document.getElementById('padm-brand2').value; save(); renderHeader(); showToast('Logo saved! 🎨'); }
 function padmSaveTheme(){ ['accent','bg','card','dark','white'].forEach(k=>{ const i=document.getElementById('padm-clr-'+k); if(i) cfg.theme['--'+k]=i.value; }); cfg.currency=document.getElementById('padm-currency')?.value||'ETB'; cfg.currencyPos=document.getElementById('padm-cur-pos')?.value||'before'; save(); applyTheme(); renderHeader(); renderHero(); renderShopGrid(); showToast('Theme saved! 🎨'); }
@@ -1599,12 +1568,9 @@ function openTeamCrestModal(lgId,teamId){
   const team=(lg.teams||[]).find(t=>t.id===teamId); if(!team) return;
   modalCtx={type:'crest',lgId,teamId};
   document.getElementById('prod-modal-title').textContent=`${team.name} — Team Logo`;
-  document.getElementById('pm-img').value=team.crestUrl||'';
-  document.getElementById('pm-emoji').value=team.emoji||'⚽';
-  document.getElementById('pm-name-row').style.display='none';
-  document.getElementById('pm-price-row').style.display='none';
-  document.getElementById('pm-badge-row').style.display='none';
-  document.getElementById('pm-desc-row').style.display='none';
+  document.getElementById('pm-img').value=team.crestUrl||''; document.getElementById('pm-emoji').value=team.emoji||'⚽';
+  document.getElementById('pm-name-row').style.display='none'; document.getElementById('pm-price-row').style.display='none';
+  document.getElementById('pm-badge-row').style.display='none'; document.getElementById('pm-desc-row').style.display='none';
   document.getElementById('pm-img-hint').textContent='Team crest/logo URL. Use PNG with transparent background. Try worldvectorlogo.com or Wikipedia.';
   const prev=document.getElementById('prod-modal-preview'); const cu=team.crestUrl||'';
   prev.innerHTML=cu?`<img src="${cu}" style="width:100%;height:100%;object-fit:contain;padding:20px" onerror="this.parentNode.textContent='${team.emoji}'">`:`<span style="font-size:56px">${team.emoji}</span>`;
@@ -1616,16 +1582,11 @@ function openProdModal(lgId,teamId,prodId){
   const {p,team}=found;
   modalCtx={type:'product',lgId,teamId,prodId};
   document.getElementById('prod-modal-title').textContent=`${team.name} — ${p.kitType}`;
-  document.getElementById('pm-img').value=p.imgUrl||'';
-  document.getElementById('pm-emoji').value=p.emoji||'⚽';
-  document.getElementById('pm-name-row').style.display='block';
-  document.getElementById('pm-price-row').style.display='block';
-  document.getElementById('pm-badge-row').style.display='block';
-  document.getElementById('pm-desc-row').style.display='block';
-  document.getElementById('pm-name').value=p.kitType;
-  document.getElementById('pm-price').value=p.price;
-  document.getElementById('pm-badge').value=p.badge||'';
-  document.getElementById('pm-desc').value=p.desc||'';
+  document.getElementById('pm-img').value=p.imgUrl||''; document.getElementById('pm-emoji').value=p.emoji||'⚽';
+  document.getElementById('pm-name-row').style.display='block'; document.getElementById('pm-price-row').style.display='block';
+  document.getElementById('pm-badge-row').style.display='block'; document.getElementById('pm-desc-row').style.display='block';
+  document.getElementById('pm-name').value=p.kitType; document.getElementById('pm-price').value=p.price;
+  document.getElementById('pm-badge').value=p.badge||''; document.getElementById('pm-desc').value=p.desc||'';
   document.getElementById('pm-img-hint').textContent='Jersey image URL. Upload to imgur.com and paste the direct link.';
   const prev=document.getElementById('prod-modal-preview');
   if(p.imgUrl){ prev.innerHTML=`<img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.textContent='${p.emoji||'⚽'}'">` } else { prev.textContent=p.emoji||'⚽'; }
@@ -1649,8 +1610,7 @@ function saveProdModal(){
   const lg=cfg.leagues.find(l=>l.id===modalCtx.lgId); if(!lg) return;
   const team=lg.teams.find(t=>t.id===modalCtx.teamId); if(!team) return;
   if(modalCtx.type==='crest'){
-    team.crestUrl=document.getElementById('pm-img').value||'';
-    team.emoji=document.getElementById('pm-emoji').value||team.emoji;
+    team.crestUrl=document.getElementById('pm-img').value||''; team.emoji=document.getElementById('pm-emoji').value||team.emoji;
     save(); closeProdModal(); padmRenderProducts(); renderShopGrid(); showToast('Team logo saved! 🎨'); return;
   }
   const pidx=team.products.findIndex(p=>p.id===modalCtx.prodId); if(pidx===-1) return;
