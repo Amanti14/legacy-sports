@@ -736,8 +736,9 @@ async function pushCloudConfig(showMsg=true){
   const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
   setSyncStatus('⏳ Syncing to cloud…','#f5a623');
   try{
+    cfg._lastUpdated=Date.now();
     const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(cfg)});
-    if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); return true; }
+    if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); _lastKnownRemoteTs=cfg._lastUpdated; return true; }
     else{ setSyncStatus('❌ Sync failed — check your credentials','#ef4444'); showMsg&&showToast('Sync failed. Check your Bin ID & API key.'); return false; }
   }catch(e){ setSyncStatus('❌ Network error during sync','#ef4444'); showMsg&&showToast('Network error during sync'); return false; }
 }
@@ -759,6 +760,7 @@ function saveJsonBinCredentials(){
     if(notice) notice.style.display=hasCloudSync()?'none':'block';
     updateSyncStatusPanel();
   }
+  startLiveSyncPolling();
 }
 
 async function testJsonBinConnection(){
@@ -786,6 +788,52 @@ function applyRemoteConfig(remote){
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
 }
+
+// ── LIVE SYNC POLLING ──────────────────────────────
+// Every few seconds, cheaply check if the cloud config changed (compare _lastUpdated
+// timestamp) and only re-fetch + re-apply the full config when it actually did.
+// This makes admin changes appear live on every open device, not just on next app launch.
+let _lastKnownRemoteTs=cfg._lastUpdated||0;
+let _pollTimer=null;
+const POLL_INTERVAL_MS=8000;
+
+function startLiveSyncPolling(){
+  if(_pollTimer) return; // already running
+  if(!hasCloudSync()) return; // nothing to poll without credentials
+  _pollTimer=setInterval(pollForRemoteChanges,POLL_INTERVAL_MS);
+}
+
+function stopLiveSyncPolling(){
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
+}
+
+async function pollForRemoteChanges(){
+  // Don't interrupt a user mid-checkout or mid-payment-verification
+  const dangerPages=['checkout','success'];
+  const activePage=document.querySelector('.page.active')?.id||'';
+  if(dangerPages.some(p=>activePage.includes(p))) return;
+  if(_pendingOrder) return;
+
+  const remote=await fetchCloudConfig();
+  if(!remote) return; // network hiccup, try again next tick
+
+  const remoteTs=remote._lastUpdated||0;
+  if(remoteTs>_lastKnownRemoteTs){
+    _lastKnownRemoteTs=remoteTs;
+    applyRemoteConfig(remote);
+    // Re-render whatever's currently visible so changes show instantly
+    if(activePage.includes('profile')&&isAdmin()){ populatePadmForms(); updateSyncStatusPanel(); }
+    if(activePage.includes('cart')) showCart();
+    if(activePage.includes('info')) showInfo();
+  }
+}
+
+// Pause polling when the Mini App is backgrounded, resume when it's foregrounded —
+// saves battery/data and avoids odd mid-transition updates.
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ stopLiveSyncPolling(); }
+  else if(hasCloudSync()){ pollForRemoteChanges(); startLiveSyncPolling(); }
+});
 
 function updateSyncStatusPanel(){
   const el=document.getElementById('sync-current-status'); if(!el) return;
@@ -1068,6 +1116,7 @@ function bootApp(){
   if(tgUser&&!alreadyWelcomed&&!String(tgUser.id).startsWith('guest_')){ showToast(`Welcome, ${tgUser.first_name}! 👋`); localStorage.setItem('emartzon_welcomed_'+tgUser.id,'1'); }
   let tapCount=0,tapTimer;
   document.querySelector('.logo').addEventListener('click',()=>{ tapCount++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>tapCount=0,700); if(tapCount>=5){ tapCount=0; if(isAdmin()) showAdminDirect(); } });
+  startLiveSyncPolling();
 }
 function updateNavProfileIcon(){
   if(!tgUser) return;
