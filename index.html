@@ -401,7 +401,7 @@
 const VERIFY_WORKER_URL = "https://ancient-mud-9bee.amantifekede14.workers.dev";
 
 // ═══════════════════════════════════════════
-// DEFAULT CONFIG
+// DEFAULT CONFIG — unchanged from original
 // ═══════════════════════════════════════════
 const DEFAULT_CONFIG = {
   pin:"1234",ownerTelegramId:"",adminIds:[],
@@ -695,7 +695,6 @@ const DEFAULT_CONFIG = {
   ],
 };
 
-// ── STATE ──────────────────────────────────────────
 function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
 
 function mergeLeagues(saved, defaults) {
@@ -737,12 +736,14 @@ async function fetchCloudConfig(){
   }catch(e){ return null; }
 }
 
+// ── CHANGE 1 of 4: stamp _lastUpdated on every push ──
 async function pushCloudConfig(showMsg=true){
   const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
   setSyncStatus('⏳ Syncing to cloud…','#f5a623');
   try{
+    cfg._lastUpdated=Date.now();
     const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(cfg)});
-    if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); return true; }
+    if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); _lastKnownRemoteTs=cfg._lastUpdated; return true; }
     else{ setSyncStatus('❌ Sync failed — check your credentials','#ef4444'); showMsg&&showToast('Sync failed. Check your Bin ID & API key.'); return false; }
   }catch(e){ setSyncStatus('❌ Network error during sync','#ef4444'); showMsg&&showToast('Network error during sync'); return false; }
 }
@@ -753,6 +754,7 @@ function setSyncStatus(msg,color){
   clearTimeout(el._t); if(color==='#22c55e') el._t=setTimeout(()=>{ el.style.display='none'; },5000);
 }
 
+// ── CHANGE 2 of 4: start polling after credentials saved ──
 function saveJsonBinCredentials(){
   const binId=(document.getElementById('jsonbin-bin-id-setup')?.value||document.getElementById('jsonbin-bin-id')?.value||'').trim();
   const apiKey=(document.getElementById('jsonbin-api-key-setup')?.value||document.getElementById('jsonbin-api-key')?.value||'').trim();
@@ -763,6 +765,7 @@ function saveJsonBinCredentials(){
   document.getElementById('jsonbin-setup-notice')?.style?.display && (document.getElementById('jsonbin-setup-notice').style.display='none');
   showToast('Credentials saved! Now tap Push Config to Cloud.');
   updateSyncStatusPanel();
+  startLiveSyncPolling();
 }
 
 async function testJsonBinConnection(){
@@ -791,6 +794,42 @@ function applyRemoteConfig(remote){
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
 }
 
+// ── CHANGE 3 of 4: live polling system ──────────────
+// Every 8 seconds, cheaply check if cloud config changed by comparing
+// _lastUpdated timestamp. Only re-fetches full config when it actually changed.
+// Skips polling during checkout/payment so it never interrupts an order.
+let _pollTimer=null;
+const POLL_INTERVAL_MS=8000;
+let _lastKnownRemoteTs=0; // initialized after cfg below
+
+function startLiveSyncPolling(){
+  if(_pollTimer||!hasCloudSync()) return;
+  _pollTimer=setInterval(pollForRemoteChanges,POLL_INTERVAL_MS);
+}
+function stopLiveSyncPolling(){
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
+}
+async function pollForRemoteChanges(){
+  const activePage=document.querySelector('.page.active')?.id||'';
+  if(activePage.includes('checkout')||activePage.includes('success')) return;
+  if(_pendingOrder) return;
+  const remote=await fetchCloudConfig();
+  if(!remote) return;
+  const remoteTs=remote._lastUpdated||0;
+  if(remoteTs>_lastKnownRemoteTs){
+    _lastKnownRemoteTs=remoteTs;
+    applyRemoteConfig(remote);
+    if(activePage.includes('profile')&&isAdmin()){ populatePadmForms(); updateSyncStatusPanel(); }
+    if(activePage.includes('cart')) showCart();
+    if(activePage.includes('info')) showInfo();
+  }
+}
+// Pause when app backgrounded, resume + immediate check when foregrounded
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ stopLiveSyncPolling(); }
+  else if(hasCloudSync()){ pollForRemoteChanges(); startLiveSyncPolling(); }
+});
+
 function updateSyncStatusPanel(){
   const el=document.getElementById('sync-current-status'); if(!el) return;
   const c=getJBinCreds();
@@ -803,13 +842,13 @@ let savedCfg=JSON.parse(localStorage.getItem('emartzon_cfg')||'null');
 let cfg;
 if(savedCfg){ cfg=Object.assign({},DEFAULT_CONFIG,savedCfg); cfg.leagues=mergeLeagues(savedCfg.leagues,DEFAULT_CONFIG.leagues); if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment); }
 else { cfg=deepClone(DEFAULT_CONFIG); }
+// NOW safe to read cfg._lastUpdated since cfg is initialized above
+_lastKnownRemoteTs=cfg._lastUpdated||0;
 
-// ── CART PERSISTENCE ──────────────────────────────
 function cartKey(){ return tgUser ? 'emartzon_cart_'+String(tgUser.id) : null; }
 function loadCart(){ const k=cartKey(); if(!k) return; try{ const saved=localStorage.getItem(k); if(saved) cart=JSON.parse(saved); } catch(e){ cart=[]; } updateBadge(); }
 function saveCart(){ const k=cartKey(); if(!k) return; localStorage.setItem(k,JSON.stringify(cart)); }
 
-// ── TRANSACTION PROOF ─────────────────────────────
 function getUsedTxns(){ try{ return JSON.parse(localStorage.getItem('emartzon_used_txns')||'[]'); }catch(e){ return []; } }
 function markTxnUsed(url){ const used=getUsedTxns(); used.push(url.trim().toLowerCase()); localStorage.setItem('emartzon_used_txns',JSON.stringify(used)); }
 function isTxnUsed(url){ return getUsedTxns().includes(url.trim().toLowerCase()); }
@@ -930,7 +969,6 @@ async function submitTxnProof(){
   btn.disabled=true; btn.style.opacity='0.5';
   inp.style.borderColor='var(--accent)';
   verifying.style.display='block';
-  // Pass expected account so Worker can verify recipient server-side
   const pay=cfg.payment||DEFAULT_CONFIG.payment;
   const isTPay=_pendingOrder?.rawPayment==='telebirr';
   const expectedAccount=isTPay?(pay.telebirrNum||''):(pay.cbeNum||'');
@@ -1015,7 +1053,6 @@ function isOwner(){ if(!tgUser) return false; if(!cfg.ownerTelegramId) return tr
 function isAdmin(){ if(!tgUser) return false; if(isOwner()) return true; return (cfg.adminIds||[]).map(String).includes(String(tgUser.id)); }
 function claimOwnership(){ if(!cfg.ownerTelegramId&&tgUser){ cfg.ownerTelegramId=String(tgUser.id); if(!cfg.adminIds) cfg.adminIds=[]; save(); } }
 
-// ── LOGIN ──────────────────────────────────────────
 window.addEventListener('load',()=>{ applyTheme(); initLogin(); });
 
 async function initLogin(){
@@ -1060,6 +1097,8 @@ function enterApp(){
   const s=document.getElementById('login-screen'); s.style.transition='opacity .35s ease,transform .35s ease'; s.style.opacity='0'; s.style.transform='scale(.97)';
   setTimeout(()=>{ s.style.display='none'; bootApp(); },350);
 }
+
+// ── CHANGE 4 of 4: start polling in bootApp ──
 function bootApp(){
   claimOwnership(); loadCart();
   renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
@@ -1071,7 +1110,9 @@ function bootApp(){
   if(tgUser&&!alreadyWelcomed&&!String(tgUser.id).startsWith('guest_')){ showToast(`Welcome, ${tgUser.first_name}! 👋`); localStorage.setItem('emartzon_welcomed_'+tgUser.id,'1'); }
   let tapCount=0,tapTimer;
   document.querySelector('.logo').addEventListener('click',()=>{ tapCount++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>tapCount=0,700); if(tapCount>=5){ tapCount=0; if(isAdmin()) showAdminDirect(); } });
+  startLiveSyncPolling();
 }
+
 function updateNavProfileIcon(){
   if(!tgUser) return;
   const ini=((tgUser.first_name||'?')[0]+(tgUser.last_name?tgUser.last_name[0]:'')).toUpperCase();
@@ -1080,11 +1121,9 @@ function updateNavProfileIcon(){
   if(tgUser.photo_url){ el.innerHTML=`<img src="${tgUser.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${ini}'">` } else { el.textContent=ini; }
 }
 
-// ── THEME ─────────────────────────────────────────
 function applyTheme(){ const t=cfg.theme||DEFAULT_CONFIG.theme; Object.entries(t).forEach(([k,v])=>document.documentElement.style.setProperty(k,v)); }
 function liveColor(v,val){ document.documentElement.style.setProperty(v,val); const k=v.replace('--','clr-'); const e=document.getElementById(k+'-hex'); if(e) e.textContent=val; }
 
-// ── HEADER / HERO ─────────────────────────────────
 function renderHeader(){
   const el=document.getElementById('hdr-logo-img');
   if(cfg.logoUrl){ el.className='logo-img'; el.outerHTML=`<img id="hdr-logo-img" class="logo-img" src="${cfg.logoUrl}" onerror="this.outerHTML='<div id=hdr-logo-img class=logo-emoji>${cfg.logoEmoji||'⚽'}</div>'">`; }
@@ -1100,7 +1139,6 @@ function renderHero(){
   document.getElementById('hero-img-container').innerHTML=h.imgUrl?`<img class="hero-img" src="${h.imgUrl}" onerror="this.style.display='none'">`:'';
 }
 
-// ── SHOP NAV ──────────────────────────────────────
 function kitIcon(t){ return {'Home Kit':'🏠','Away Kit':'✈️','Third Kit':'3️⃣','Goalkeeper':'🧤','Training Top':'💪','Shorts':'👖','UCL Edition':'🏆','Local':'🇪🇹'}[t]||'⚽'; }
 
 function renderLeagueTabs(){
@@ -1247,7 +1285,6 @@ function addToCart(){ const ex=cart.find(i=>i.id===curProduct.id&&i.size===selSi
 function quickAdd(pid){ const found=findProduct(pid); if(!found) return; const {p,team}=found; const name=`${team.name} ${p.kitType}`; const item={...p,name,teamName:team.name,size:cfg.sizes[2]||'M',qty:1}; const ex=cart.find(i=>i.id===p.id&&i.size===item.size); if(ex) ex.qty++; else cart.push(item); saveCart(); updateBadge(); showToast(`${name} added! 🛒`); }
 function updateBadge(){ const n=cart.reduce((a,i)=>a+i.qty,0); const b=document.getElementById('cart-badge'); b.textContent=n; b.style.display=n>0?'flex':'none'; }
 
-// ── SHIPPING ──────────────────────────────────────
 function renderShipOpts(){
   curShipping=cfg.shipping[0]||null;
   document.getElementById('ship-opts-container').innerHTML=cfg.shipping.map((s,i)=>`
@@ -1276,7 +1313,6 @@ function renderPickupCard(){
     <div style="font-size:11px;color:var(--gray);margin-top:3px">📞 ${cfg.phone}</div>`;
 }
 
-// ── PAYMENT ───────────────────────────────────────
 function selectPayment(method){
   selectedPayment=method;
   document.querySelectorAll('.pay-opt').forEach(el=>el.classList.remove('selected'));
@@ -1334,7 +1370,6 @@ function renderPaymentInstructions(method){
 
 function copyToClipboard(text){ if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>showToast('Copied! 📋')); } else { showToast(text); } }
 
-// ── CART ──────────────────────────────────────────
 function showCart(){
   const con=document.getElementById('cart-content');
   if(!cart.length){
@@ -1364,7 +1399,6 @@ function showCart(){
 }
 function rmItem(idx){ cart.splice(idx,1); saveCart(); updateBadge(); showCart(); }
 
-// ── CHECKOUT ──────────────────────────────────────
 function showCheckout(){ if(!curShipping) curShipping=cfg.shipping[0]; renderShipOpts(); selectPayment(selectedPayment); updateCheckoutSummary(); showPage('checkout'); }
 function updateCheckoutSummary(){
   const sub=cart.reduce((a,i)=>a+i.price*i.qty,0); const ship=(curShipping||cfg.shipping[0])?.price||0;
@@ -1376,7 +1410,6 @@ function updateCheckoutSummary(){
     <div class="sum-row total"><span>Total</span><span>${fmt(sub+ship)}</span></div>`;
 }
 
-// ── PLACE ORDER & RECEIPT ─────────────────────────
 function placeOrder(){
   const sub=cart.reduce((a,i)=>a+i.price*i.qty,0); const ship=(curShipping||cfg.shipping[0])?.price||0; const total=sub+ship;
   const m=curShipping||cfg.shipping[0];
@@ -1453,7 +1486,6 @@ function shareReceipt(){
   else { showToast('Use the Share button in your browser'); }
 }
 
-// ── STORE INFO ────────────────────────────────────
 function showInfo(){
   document.getElementById('store-info-card').innerHTML=`
     <h3 style="margin-bottom:10px">🏪 ${cfg.storeName}</h3>
@@ -1465,7 +1497,6 @@ function showInfo(){
   setNav('info'); showPage('info');
 }
 
-// ── PROFILE ───────────────────────────────────────
 function showProfile(){
   if(!tgUser){ showToast('Not logged in'); return; }
   const u=tgUser; const full=[u.first_name,u.last_name].filter(Boolean).join(' ');
@@ -1494,7 +1525,6 @@ function showProfile(){
   setNav('profile'); showPage('profile');
 }
 
-// ── PROFILE ADMIN FORMS ───────────────────────────
 function populatePadmForms(){
   padmRenderProducts(); padmRenderShipping();
   const pay=cfg.payment||DEFAULT_CONFIG.payment;
@@ -1563,7 +1593,6 @@ function padmSaveTheme(){ ['accent','bg','card','dark','white'].forEach(k=>{ con
 function padmResetTheme(){ cfg.theme=deepClone(DEFAULT_CONFIG.theme); save(); applyTheme(); populatePadmForms(); showToast('Theme reset'); }
 function padmSaveHero(){ cfg.hero={tag:document.getElementById('padm-hero-tag')?.value||'',h1a:document.getElementById('padm-hero-h1a')?.value||'',h1b:document.getElementById('padm-hero-h1b')?.value||'',sub:document.getElementById('padm-hero-sub')?.value||'',imgUrl:document.getElementById('padm-hero-img')?.value||''}; save(); renderHero(); showToast('Hero saved! 🎉'); }
 
-// ── PRODUCT / CREST MODAL ─────────────────────────
 function openTeamCrestModal(lgId,teamId){
   const lg=(cfg.leagues||[]).find(l=>l.id===lgId); if(!lg) return;
   const team=(lg.teams||[]).find(t=>t.id===teamId); if(!team) return;
@@ -1623,7 +1652,6 @@ function saveProdModal(){
   save(); closeProdModal(); padmRenderProducts(); renderShopGrid(); showToast('Product saved! ✅');
 }
 
-// ── MANAGE ADMINS ─────────────────────────────────
 function renderManageAdmins(){
   const list=document.getElementById('admin-ids-list'); if(!list) return;
   const ids=cfg.adminIds||[];
@@ -1634,7 +1662,6 @@ function addAdmin(){ const inp=document.getElementById('new-admin-id-inp'); cons
 function removeAdmin(id){ cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id); save(); renderManageAdmins(); showToast('Admin removed'); }
 function copyOwnerId(){ const id=String(tgUser?.id||''); if(navigator.clipboard) navigator.clipboard.writeText(id).then(()=>showToast('ID copied! 📋')); else showToast(id); }
 
-// ── NAVIGATION ────────────────────────────────────
 function goShop(){ shopState={leagueId:'all',teamId:null,kitFilter:'all'}; renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle(); setNav('shop'); showPage('shop'); }
 function goSearch(){ goShop(); setTimeout(()=>{ const q=prompt('Search teams or kits:'); if(q) renderShopGrid(q); },100); }
 function showAdminDirect(){ if(isAdmin()) showProfile(); }
