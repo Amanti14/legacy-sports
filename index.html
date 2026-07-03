@@ -400,6 +400,10 @@
 
 const VERIFY_WORKER_URL = "https://ancient-mud-9bee.amantifekede14.workers.dev";
 
+// ── OWNER IDs — only these Telegram IDs are owners ──────────────────
+// To add another owner, just add their ID to this array.
+const OWNER_IDS = ["5158823198"];
+
 // ═══════════════════════════════════════════
 // DEFAULT CONFIG — unchanged from original
 // ═══════════════════════════════════════════
@@ -741,9 +745,8 @@ async function pushCloudConfig(showMsg=true){
   const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
   setSyncStatus('⏳ Syncing to cloud…','#f5a623');
   try{
-    const toSync={...cfg}; delete toSync.ownerTelegramId; // never expose owner ID in cloud
-    toSync._lastUpdated=Date.now(); cfg._lastUpdated=toSync._lastUpdated;
-    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(toSync)});
+    cfg._lastUpdated=Date.now();
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(cfg)});
     if(res.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); _lastKnownRemoteTs=cfg._lastUpdated; return true; }
     else{ setSyncStatus('❌ Sync failed — check your credentials','#ef4444'); showMsg&&showToast('Sync failed. Check your Bin ID & API key.'); return false; }
   }catch(e){ setSyncStatus('❌ Network error during sync','#ef4444'); showMsg&&showToast('Network error during sync'); return false; }
@@ -786,13 +789,9 @@ async function pullConfigFromCloud(){
 }
 
 function applyRemoteConfig(remote){
-  // Always preserve the local owner ID — never let cloud overwrite it
-  const localOwnerId=localStorage.getItem('emartzon_owner_id')||cfg.ownerTelegramId||'';
   cfg=Object.assign({},DEFAULT_CONFIG,remote);
   cfg.leagues=mergeLeagues(remote.leagues,DEFAULT_CONFIG.leagues);
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
-  // Restore owner from local storage — cloud version never has ownerTelegramId
-  cfg.ownerTelegramId=localOwnerId;
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
 }
@@ -1049,39 +1048,13 @@ let shopState={leagueId:'all',teamId:null,kitFilter:'all'};
 let modalCtx=null;
 let tgUser=null;
 
-function save(){ localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); if(hasCloudSync()) pushCloudConfigSafe(); }
+function save(){ localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); if(hasCloudSync()) pushCloudConfig(false); }
 function saveOrders(){ localStorage.setItem('emartzon_orders',JSON.stringify(orderHistory)); }
 function fmt(n){ return cfg.currencyPos==='after'?n.toLocaleString()+' '+cfg.currency:cfg.currency+' '+n.toLocaleString(); }
-function isOwner(){ if(!tgUser||!cfg.ownerTelegramId) return false; return String(tgUser.id)===String(cfg.ownerTelegramId); }
-function isAdmin(){ if(!tgUser) return false; if(isOwner()) return true; if(!cfg.ownerTelegramId) return false; return (cfg.adminIds||[]).map(String).includes(String(tgUser.id)); }
-function claimOwnership(){
-  // Owner ID is stored only in localStorage on the owner's own device.
-  // It is NEVER pushed to cloud, so other users can never become owner via sync.
-  const localOwnerId=localStorage.getItem('emartzon_owner_id');
-  if(localOwnerId){
-    cfg.ownerTelegramId=localOwnerId; // restore from local storage on each boot
-  } else if(!cfg.ownerTelegramId&&tgUser){
-    // First ever boot on this device with no owner set anywhere — claim it
-    cfg.ownerTelegramId=String(tgUser.id);
-    localStorage.setItem('emartzon_owner_id',String(tgUser.id));
-    // Save to cloud but strip ownerTelegramId so cloud version never has it
-    if(!cfg.adminIds) cfg.adminIds=[];
-    localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
-    if(hasCloudSync()) pushCloudConfigSafe();
-  }
-}
-// Push to cloud without leaking ownerTelegramId or adminIds
-async function pushCloudConfigSafe(){
-  const toSync={...cfg};
-  delete toSync.ownerTelegramId; // never expose owner ID in cloud
-  // adminIds DO sync so owner can manage them from their device
-  const c=getJBinCreds(); if(!c||!c.binId||!c.apiKey) return;
-  try{
-    toSync._lastUpdated=Date.now(); cfg._lastUpdated=toSync._lastUpdated;
-    await fetch(`https://api.jsonbin.io/v3/b/${c.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(toSync)});
-    _lastKnownRemoteTs=toSync._lastUpdated;
-  }catch(e){}
-}
+function isOwner(){ if(!tgUser) return false; return OWNER_IDS.includes(String(tgUser.id)); }
+function isAdmin(){ if(!tgUser) return false; if(isOwner()) return true; return (cfg.adminIds||[]).map(String).includes(String(tgUser.id)); }
+function claimOwnership(){ /* ownership is hardcoded in OWNER_IDS — nothing to claim at runtime */ }
+// pushCloudConfigSafe removed — ownership is now hardcoded, no sensitive data to strip
 
 window.addEventListener('load',()=>{ applyTheme(); initLogin(); });
 
@@ -1551,7 +1524,7 @@ function showProfile(){
   document.getElementById('profile-admin-section').style.display=isAdmin()?'block':'none';
   document.getElementById('profile-owner-section').style.display=isOwner()?'block':'none';
   if(isAdmin()){ populatePadmForms(); updateSyncStatusPanel(); const notice=document.getElementById('jsonbin-setup-notice'); if(notice) notice.style.display=hasCloudSync()?'none':'block'; }
-  if(isOwner()){ renderManageAdmins(); const oid=document.getElementById('owner-id-display'); const mid=document.getElementById('owner-my-id-copy'); if(oid) oid.textContent=cfg.ownerTelegramId||String(u.id); if(mid) mid.textContent=String(u.id); }
+  if(isOwner()){ renderManageAdmins(); const oid=document.getElementById('owner-id-display'); const mid=document.getElementById('owner-my-id-copy'); if(oid) oid.textContent=OWNER_IDS.join(", "); if(mid) mid.textContent=String(u.id); }
   setNav('profile'); showPage('profile');
 }
 
@@ -1688,7 +1661,7 @@ function renderManageAdmins(){
   if(!ids.length){ list.innerHTML=`<div style="padding:14px;text-align:center;font-size:12px;color:var(--gray)">No admins added yet.</div>`; return; }
   list.innerHTML=ids.map((id,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)"><div style="width:36px;height:36px;border-radius:50%;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙️</div><div style="flex:1"><div style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">${id}</div><div style="font-size:11px;color:var(--gray);margin-top:1px">Admin #${i+1}</div></div><button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 11px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button></div>`).join('');
 }
-function addAdmin(){ const inp=document.getElementById('new-admin-id-inp'); const val=(inp?.value||'').trim().replace(/\D/g,''); if(!val){ showToast('Enter a valid Telegram ID'); return; } if(val===String(cfg.ownerTelegramId)){ showToast("That's your own ID"); return; } if((cfg.adminIds||[]).includes(val)){ showToast('Already an admin'); return; } if(!cfg.adminIds) cfg.adminIds=[]; cfg.adminIds.push(val); save(); if(inp) inp.value=''; renderManageAdmins(); showToast('Admin added! ✅'); }
+function addAdmin(){ const inp=document.getElementById('new-admin-id-inp'); const val=(inp?.value||'').trim().replace(/\D/g,''); if(!val){ showToast('Enter a valid Telegram ID'); return; } if(OWNER_IDS.includes(val)){ showToast("That's an owner ID — owners already have full access"); return; } if((cfg.adminIds||[]).includes(val)){ showToast('Already an admin'); return; } if(!cfg.adminIds) cfg.adminIds=[]; cfg.adminIds.push(val); save(); if(inp) inp.value=''; renderManageAdmins(); showToast('Admin added! ✅'); }
 function removeAdmin(id){ cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id); save(); renderManageAdmins(); showToast('Admin removed'); }
 function copyOwnerId(){ const id=String(tgUser?.id||''); if(navigator.clipboard) navigator.clipboard.writeText(id).then(()=>showToast('ID copied! 📋')); else showToast(id); }
 
