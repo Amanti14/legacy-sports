@@ -844,6 +844,11 @@ function applyRemoteConfig(remote){
     ? mergeLeagues(remote.leagues, DEFAULT_CONFIG.leagues)
     : deepClone(DEFAULT_CONFIG.leagues);
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
+  // Always enforce hardcoded brand — cloud can never override the store name
+  cfg.brandName1=DEFAULT_CONFIG.brandName1;
+  cfg.brandName2=DEFAULT_CONFIG.brandName2;
+  cfg.storeName=DEFAULT_CONFIG.storeName;
+  cfg.storeSub=DEFAULT_CONFIG.storeSub;
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
 }
@@ -907,6 +912,11 @@ if(savedCfg){
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
 }
 else { cfg=deepClone(DEFAULT_CONFIG); }
+// Always enforce hardcoded brand — localStorage can never override the store name
+cfg.brandName1=DEFAULT_CONFIG.brandName1;
+cfg.brandName2=DEFAULT_CONFIG.brandName2;
+cfg.storeName=DEFAULT_CONFIG.storeName;
+cfg.storeSub=DEFAULT_CONFIG.storeSub;
 // NOW safe to read cfg._lastUpdated since cfg is initialized above
 _lastKnownRemoteTs=cfg._lastUpdated||0;
 
