@@ -199,7 +199,7 @@
       <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(249,115,22,.12) 0%,transparent 70%);pointer-events:none"></div>
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1a56db,var(--accent),transparent)"></div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-        <div id="profile-avatar-big" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#f97316);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--bg);flex-shrink:0;overflow:hidden;border:3px solid rgba(249,115,22,.3);box-shadow:0 4px 20px rgba(26,86,219,.25)">?</div>
+        <div id="profile-avatar-big" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#2563eb);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--bg);flex-shrink:0;overflow:hidden;border:3px solid rgba(26,86,219,.4);box-shadow:0 4px 20px rgba(26,86,219,.3)">?</div>
         <div style="flex:1;min-width:0">
           <div id="profile-name" style="font-size:20px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
           <div id="profile-handle" style="font-size:13px;color:var(--accent);margin-bottom:8px">@—</div>
@@ -230,7 +230,7 @@
         <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.5px;white-space:nowrap">⚙️ ADMIN SETTINGS</div>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
-      <div id="jsonbin-setup-notice" style="display:none;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:12px;padding:14px;margin-bottom:14px">
+      <div id="jsonbin-setup-notice" style="display:none;background:rgba(26,86,219,.08);border:1px solid rgba(26,86,219,.3);border-radius:12px;padding:14px;margin-bottom:14px">
         <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px">⚠️ Cloud Sync Not Configured</div>
         <div style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:10px">Your edits currently only apply to your own device. To sync changes to all users, set up a free JSONBin account:</div>
         <div style="font-size:12px;color:var(--light);line-height:1.8">1. Go to <b>jsonbin.io</b> → Sign up free<br>2. Create a new Bin with <code style="background:var(--card2);padding:1px 5px;border-radius:4px">{}</code> as content<br>3. Copy your <b>Bin ID</b> and <b>API Key</b><br>4. Paste them below and tap Save</div>
@@ -442,7 +442,7 @@ const DEFAULT_CONFIG = {
   currency:"ETB",currencyPos:"before",
   payment:{ cbeNum:"1000123456789", cbeName:"Emartzon Sportswear", telebirrNum:"+251 911 234 567", telebirrName:"Emartzon Sportswear" },
   hero:{tag:"🔥 New Season 2024/25",h1a:"Official",h1b:"Football Jerseys",sub:"Authentic kits from top leagues worldwide",imgUrl:""},
-  theme:{"--accent":"#f97316","--bg":"#080d1a","--card":"#0f1829","--dark":"#0a1020","--white":"#ffffff","--border":"#1e2d4a","--accent2":"#1a56db"},
+  theme:{"--accent":"#1a56db","--bg":"#080d1a","--card":"#0f1829","--dark":"#0a1020","--white":"#ffffff","--border":"#1e2d4a","--accent2":"#f97316"},
   sizes:["XS","S","M","L","XL","XXL"],
   shipping:[
     {id:"delivery",icon:"🚚",name:"Home Delivery",desc:"3–5 business days",price:80},
@@ -791,7 +791,7 @@ async function pushCloudConfig(showMsg=true){
   const binId  = (c&&c.binId)  ? c.binId  : JBIN_ID;
   const apiKey = (c&&c.apiKey) ? c.apiKey : JBIN_KEY;
   if(!binId||!apiKey){ showMsg&&showToast('Cloud sync not configured'); return false; }
-  setSyncStatus('⏳ Syncing to cloud…','#f5a623');
+  setSyncStatus('⏳ Syncing to cloud…','#1a56db');
   try{
     cfg._lastUpdated=Date.now();
     const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':apiKey,'X-Bin-Versioning':'false'},body:JSON.stringify(cfg)});
@@ -898,7 +898,7 @@ function updateSyncStatusPanel(){
   const el=document.getElementById('sync-current-status'); if(!el) return;
   const c=getJBinCreds();
   if(c&&c.binId&&c.apiKey){ el.innerHTML=`<span style="color:#22c55e;font-weight:700">☁️ Cloud Sync ENABLED</span><br>Bin: <code style="background:var(--card);padding:1px 5px;border-radius:4px">${c.binId}</code><br>Every save pushes to all users automatically.`; }
-  else { el.innerHTML=`<span style="color:#f5a623;font-weight:700">⚠️ Cloud Sync NOT configured</span><br>Your changes only apply to your device.`; }
+  else { el.innerHTML=`<span style="color:#f97316;font-weight:700">⚠️ Cloud Sync NOT configured</span><br>Your changes only apply to your device.`; }
   if(c){ ['jsonbin-bin-id','jsonbin-bin-id-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.binId||''; }); ['jsonbin-api-key','jsonbin-api-key-setup'].forEach(id=>{ const e=document.getElementById(id); if(e&&!e.value) e.value=c.apiKey||''; }); }
 }
 
@@ -956,7 +956,7 @@ function showTxnProofScreen(p){
   const logoText=isT?'tele<br>birr':'CBE';
   document.getElementById('checkout-scroll').innerHTML=`
     <div style="height:20px"></div>
-    <div style="margin:0 14px 14px;background:linear-gradient(135deg,rgba(26,86,219,.15),rgba(249,115,22,.08));border:1px solid rgba(26,86,219,.3);border-radius:16px;padding:18px;text-align:center">
+    <div style="margin:0 14px 14px;background:linear-gradient(135deg,rgba(26,86,219,.18),rgba(26,86,219,.06));border:1px solid rgba(26,86,219,.35);border-radius:16px;padding:18px;text-align:center">
       <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Amount to Transfer</div>
       <div style="font-size:32px;font-weight:900;color:var(--accent);letter-spacing:-1px">${p.totalFmt}</div>
       <div style="font-size:12px;color:var(--gray);margin-top:4px">via <b style="color:var(--white)">${providerName}</b></div>
@@ -988,7 +988,7 @@ function showTxnProofScreen(p){
       <div id="txn-err" style="display:none;margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px">
         <div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:4px" id="txn-err-title">Verification Failed</div>
         <div style="font-size:12px;color:var(--gray);line-height:1.6;white-space:pre-wrap" id="txn-err-msg"></div>
-        <div id="txn-partial-info" style="display:none;margin-top:10px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:10px">
+        <div id="txn-partial-info" style="display:none;margin-top:10px;background:rgba(26,86,219,.08);border:1px solid rgba(26,86,219,.25);border-radius:8px;padding:10px">
           <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">💰 Partial Payment Detected</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
             <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Order Total</div><div style="font-weight:700;color:var(--white)" id="txn-partial-total">—</div></div>
@@ -1189,7 +1189,7 @@ function updateNavProfileIcon(){
   if(!tgUser) return;
   const ini=((tgUser.first_name||'?')[0]+(tgUser.last_name?tgUser.last_name[0]:'')).toUpperCase();
   const el=document.getElementById('nav-profile-icon');
-  el.style.cssText='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#f97316);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);overflow:hidden;';
+  el.style.cssText='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#2563eb);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);overflow:hidden;';
   if(tgUser.photo_url){ el.innerHTML=`<img src="${tgUser.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentNode.textContent='${ini}'">` } else { el.textContent=ini; }
 }
 
@@ -1739,7 +1739,7 @@ function renderManageAdmins(){
   const list=document.getElementById('admin-ids-list'); if(!list) return;
   const ids=cfg.adminIds||[];
   if(!ids.length){ list.innerHTML=`<div style="padding:14px;text-align:center;font-size:12px;color:var(--gray)">No admins added yet.</div>`; return; }
-  list.innerHTML=ids.map((id,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)"><div style="width:36px;height:36px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙️</div><div style="flex:1"><div style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">${id}</div><div style="font-size:11px;color:var(--gray);margin-top:1px">Admin #${i+1}</div></div><button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 11px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button></div>`).join('');
+  list.innerHTML=ids.map((id,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)"><div style="width:36px;height:36px;border-radius:50%;background:rgba(26,86,219,.15);border:1px solid rgba(26,86,219,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙️</div><div style="flex:1"><div style="font-size:13px;font-weight:600;font-family:monospace;color:var(--light)">${id}</div><div style="font-size:11px;color:var(--gray);margin-top:1px">Admin #${i+1}</div></div><button onclick="removeAdmin('${id}')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);padding:6px 11px;border-radius:8px;font-size:12px;cursor:pointer">Remove</button></div>`).join('');
 }
 function addAdmin(){ const inp=document.getElementById('new-admin-id-inp'); const val=(inp?.value||'').trim().replace(/\D/g,''); if(!val){ showToast('Enter a valid Telegram ID'); return; } if(OWNER_IDS.includes(val)){ showToast("That's an owner ID — owners already have full access"); return; } if((cfg.adminIds||[]).includes(val)){ showToast('Already an admin'); return; } if(!cfg.adminIds) cfg.adminIds=[]; cfg.adminIds.push(val); save(); if(inp) inp.value=''; renderManageAdmins(); showToast('Admin added! ✅'); }
 function removeAdmin(id){ cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id); save(); renderManageAdmins(); showToast('Admin removed'); }
