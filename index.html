@@ -42,10 +42,10 @@
     <div class="notg-desc">This app works inside the Telegram app only.</div>
     <div class="notg-steps">
       <div class="notg-step"><div class="notg-num">1</div><div class="notg-step-text">Open <b>Telegram</b> on your phone</div></div>
-      <div class="notg-step"><div class="notg-num">2</div><div class="notg-step-text">Search for <b>@EmartzonSportswearBot</b></div></div>
+      <div class="notg-step"><div class="notg-num">2</div><div class="notg-step-text">Search for <b>@LegacySportBot</b></div></div>
       <div class="notg-step"><div class="notg-num">3</div><div class="notg-step-text">Tap <b>Start</b> then <b>🛍 Shop Now</b></div></div>
     </div>
-    <button class="notg-open-btn" onclick="window.open('https://t.me/emartzonsportswear_bot','_blank')">
+    <button class="notg-open-btn" onclick="window.open('https://t.me/LegacySportBot','_blank')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.026 9.54c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.889.681z"/></svg>
       Open in Telegram
     </button>
@@ -434,11 +434,11 @@ const JBIN_KEY = "$2a$10$wF98eMYcbolP1B1yowmL/edktVJLbByoYqhE3lPRJ.2nGkf7yzv52";
 // ═══════════════════════════════════════════
 const DEFAULT_CONFIG = {
   pin:"1234",ownerTelegramId:"",adminIds:[],
-  brandName1:"emart",brandName2:"zon",logoUrl:"https://i.imgur.com/XsXh1xb.png",logoEmoji:"⚽",
-  storeName:"Emartzon Sportswear",storeSub:"Official Football Jerseys",
+  brandName1:"Legacy",brandName2:"Sport",logoUrl:"https://i.imgur.com/XsXh1xb.png",logoEmoji:"⚽",
+  storeName:"Legacy Sport",storeSub:"Premium Football Kits & Sportswear",
   phone:"+251 911 234 567",email:"info@emartzon.com",
   address:"Bole Road, Near Edna Mall, Addis Ababa",hours:"Mon–Sat 9AM–7PM",
-  about:"Ethiopia's #1 destination for authentic football jerseys. Official kits from Premier League, La Liga, Bundesliga, Ligue 1, Serie A, Champions League and National Teams.",
+  about:"Ethiopia's premier destination for authentic football kits. Official jerseys from Premier League, La Liga, Bundesliga, Ligue 1, Serie A, Champions League and National Teams.",
   currency:"ETB",currencyPos:"before",
   payment:{ cbeNum:"1000123456789", cbeName:"Emartzon Sportswear", telebirrNum:"+251 911 234 567", telebirrName:"Emartzon Sportswear" },
   hero:{tag:"🔥 New Season 2024/25",h1a:"Official",h1b:"Football Jerseys",sub:"Authentic kits from top leagues worldwide",imgUrl:""},
@@ -848,6 +848,11 @@ function applyRemoteConfig(remote){
   applyTheme(); renderHeader(); renderHero(); renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle();
 }
 
+// ── Early variable declarations needed by polling ──
+let _pendingOrder=null;
+let cart=[];
+let tgUser=null;
+
 // ── CHANGE 3 of 4: live polling system ──────────────
 // Every 8 seconds, cheaply check if cloud config changed by comparing
 // _lastUpdated timestamp. Only re-fetches full config when it actually changed.
@@ -922,8 +927,6 @@ function validateTxnUrl(url,method){
     return 'CBE links must be from an official CBE domain.\nExample: https://cbebirr.com/receipt/...';
   return null;
 }
-
-let _pendingOrder=null;
 
 function showTxnProofScreen(p){
   _pendingOrder=p;
@@ -1098,13 +1101,11 @@ function showTxnError(msg,orderTotal,sentAmount){
 
 function cancelTxnProof(){ _pendingOrder=null; showCheckout(); }
 
-let cart=[];
 let orderHistory=JSON.parse(localStorage.getItem('emartzon_orders')||'[]');
 let curProduct=null, selSize="M", selQty=1, curShipping=null;
 let selectedPayment='cbe';
 let shopState={leagueId:'all',teamId:null,kitFilter:'all'};
 let modalCtx=null;
-let tgUser=null;
 
 function save(){ localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); if(hasCloudSync()) pushCloudConfig(false); }
 function saveOrders(){ localStorage.setItem('emartzon_orders',JSON.stringify(orderHistory)); }
@@ -1514,7 +1515,7 @@ function completeOrder(o){
     :`<div class="receipt-row"><span class="receipt-row-label">Deliver To</span><span class="receipt-row-val">${city}${address?', '+address:''}</span></div><div class="receipt-row"><span class="receipt-row-label">Contact</span><span class="receipt-row-val">${phone}</span></div>`;
   document.getElementById('receipt-card').innerHTML=`
     <div class="receipt-header">
-      <div class="receipt-header-top"><div class="receipt-brand">⚽ ${cfg.storeName}</div><div class="receipt-num">#${oid}</div></div>
+      <div class="receipt-header-top"><div class="receipt-brand">🏆 ${cfg.storeName}</div><div class="receipt-num">#${oid}</div></div>
       <div class="receipt-date">${dateStr} at ${timeStr}</div>
     </div>
     <div class="receipt-section"><div class="receipt-section-title">Customer</div>
