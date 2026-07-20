@@ -275,6 +275,10 @@
           <div class="adm-field"><label>Address</label><input id="padm-address" type="text"></div>
           <div class="adm-field"><label>Hours</label><input id="padm-hours" type="text"></div>
           <div class="adm-field"><label>About</label><textarea id="padm-about" rows="3"></textarea></div>
+          <div class="adm-field" style="margin-top:6px"><label>Owner Notification Telegram ID</label>
+            <input id="padm-owner-notify-id" type="text" placeholder="5158823198" style="font-family:monospace">
+            <div style="font-size:10px;color:var(--gray);margin-top:3px">This Telegram ID receives all order notifications. Change this when handing over to the real owner.</div>
+          </div>
           <button class="btn-save" onclick="padmSaveStore()" style="margin-bottom:12px;width:100%">Save Store Info</button>
           <hr style="border:none;border-top:1px solid var(--border);margin-bottom:12px">
           <div class="adm-field"><label>Logo Image URL</label><input id="padm-logo-url" type="url" placeholder="https://..."></div>
@@ -436,6 +440,9 @@
 <script>
 
 const VERIFY_WORKER_URL = "https://ancient-mud-9bee.amantifekede14.workers.dev";
+// Bot worker — sends receipts to customers and order alerts to owner
+// Replace with your actual bot worker URL after deploying
+const BOT_WORKER_URL = "https://sportswearminibot.amantifekede14.workers.dev";
 
 // ── OWNER IDs — only these Telegram IDs are owners ──────────────────
 // To add another owner, just add their ID to this array.
@@ -451,7 +458,7 @@ const JBIN_KEY = "$2a$10$wF98eMYcbolP1B1yowmL/edktVJLbByoYqhE3lPRJ.2nGkf7yzv52";
 // DEFAULT CONFIG — unchanged from original
 // ═══════════════════════════════════════════
 const DEFAULT_CONFIG = {
-  pin:"1234",ownerTelegramId:"",adminIds:[],
+  pin:"1234",ownerTelegramId:"",adminIds:[],ownerNotifyId:"5158823198",
   brandName1:"Vision",brandName2:"Sportswear",logoUrl:"https://i.imgur.com/XsXh1xb.png",logoEmoji:"⚽",
   storeName:"Vision Sportswear",storeSub:"Premium Football Kits & Sportswear",
   phone:"+251 911 234 567",email:"info@emartzon.com",
@@ -1709,9 +1716,35 @@ function completeOrder(o){
     </div>`;
   orderHistory.push({id:oid,userId:tgUser?String(tgUser.id):'guest',date:dateStr,total,itemCount:(cartSnapshot||[]).reduce((a,i)=>a+i.qty,0),method:m?.id||'delivery',methodIcon:m?.icon||'📦',methodName:m?.name||'Delivery',paymentMethod:payMethod,txnUrl:txnUrl||null,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:i.price}))});
   saveOrders();
+  // Send to bot Worker — customer gets receipt, owner gets full order details
+  const orderPayload = {
+    type:'order',
+    orderId:oid,
+    buyer,
+    telegramId:tgUser?.id,
+    username:tgUser?.username,
+    items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:i.price})),
+    subtotal:fmt(sub),
+    shipping:ship===0?'Free':fmt(ship),
+    total:fmt(total),
+    delivery:m?.name,
+    paymentMethod:payMethod,
+    txnUrl:txnUrl||null,
+    address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),
+    date:dateStr,
+    time:timeStr,
+    ownerNotifyId:cfg.ownerNotifyId||'5158823198',
+  };
+  // Send via Worker (works even outside Telegram WebApp context)
+  fetch(BOT_WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(orderPayload)
+  }).catch(()=>{});
+  // Also try sendData for Telegram native flow
   try{
     const tg=window.Telegram?.WebApp;
-    if(tg&&tg.sendData){ tg.sendData(JSON.stringify({type:'order',orderId:oid,buyer,telegramId:tgUser?.id,username:tgUser?.username,items:(cartSnapshot||[]).map(i=>({name:i.name,qty:i.qty,size:i.size,price:fmt(i.price*i.qty)})),subtotal:fmt(sub),shipping:ship===0?'Free':fmt(ship),total:fmt(total),delivery:m?.name,paymentMethod:payMethod,txnUrl:txnUrl||null,address:m?.id==='pickup'?cfg.storeName:(city+(address?', '+address:'')),date:dateStr,time:timeStr})); }
+    if(tg&&tg.sendData){ tg.sendData(JSON.stringify(orderPayload)); }
   }catch(e){}
   cart=[]; saveCart(); updateBadge(); _pendingOrder=null; showPage('success');
 }
@@ -1766,7 +1799,7 @@ function showProfile(){
 function populatePadmForms(){
   padmRenderProducts(); padmRenderShipping();
   const pay=cfg.payment||DEFAULT_CONFIG.payment;
-  const f={'padm-store-name':cfg.storeName,'padm-store-sub':cfg.storeSub,'padm-phone':cfg.phone,'padm-email':cfg.email,'padm-address':cfg.address,'padm-hours':cfg.hours,'padm-about':cfg.about,'padm-logo-url':cfg.logoUrl,'padm-logo-emoji':cfg.logoEmoji,'padm-brand1':cfg.brandName1,'padm-brand2':cfg.brandName2,'padm-cbe-num':pay.cbeNum,'padm-cbe-name':pay.cbeName,'padm-telebirr-num':pay.telebirrNum,'padm-telebirr-name':pay.telebirrName};
+  const f={'padm-store-name':cfg.storeName,'padm-store-sub':cfg.storeSub,'padm-phone':cfg.phone,'padm-email':cfg.email,'padm-address':cfg.address,'padm-hours':cfg.hours,'padm-about':cfg.about,'padm-logo-url':cfg.logoUrl,'padm-logo-emoji':cfg.logoEmoji,'padm-brand1':cfg.brandName1,'padm-brand2':cfg.brandName2,'padm-cbe-num':pay.cbeNum,'padm-cbe-name':pay.cbeName,'padm-telebirr-num':pay.telebirrNum,'padm-telebirr-name':pay.telebirrName,'padm-owner-notify-id':cfg.ownerNotifyId||''};
   Object.entries(f).forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
   renderThemeColorEditors();
   const cu=document.getElementById('padm-currency'); const cp=document.getElementById('padm-cur-pos');
@@ -1825,7 +1858,7 @@ function padmRenderShipping(){
 }
 function padmAddShipping(){ cfg.shipping.push({id:'ship-'+Date.now(),icon:'📦',name:'New Method',desc:'Description',price:0}); save(); padmRenderShipping(); showToast('Method added'); }
 function padmSavePayment(){ if(!cfg.payment) cfg.payment={}; cfg.payment.cbeNum=document.getElementById('padm-cbe-num').value||''; cfg.payment.cbeName=document.getElementById('padm-cbe-name').value||''; cfg.payment.telebirrNum=document.getElementById('padm-telebirr-num').value||''; cfg.payment.telebirrName=document.getElementById('padm-telebirr-name').value||''; save(); showToast('Payment info saved! ✅'); }
-function padmSaveStore(){ cfg.storeName=document.getElementById('padm-store-name').value; cfg.storeSub=document.getElementById('padm-store-sub').value; cfg.phone=document.getElementById('padm-phone').value; cfg.email=document.getElementById('padm-email').value; cfg.address=document.getElementById('padm-address').value; cfg.hours=document.getElementById('padm-hours').value; cfg.about=document.getElementById('padm-about').value; save(); renderHeader(); renderPickupCard(); showToast('Store info saved! ✅'); }
+function padmSaveStore(){ cfg.storeName=document.getElementById('padm-store-name').value; cfg.storeSub=document.getElementById('padm-store-sub').value; cfg.phone=document.getElementById('padm-phone').value; cfg.email=document.getElementById('padm-email').value; cfg.address=document.getElementById('padm-address').value; cfg.hours=document.getElementById('padm-hours').value; cfg.about=document.getElementById('padm-about').value; const notifyEl=document.getElementById('padm-owner-notify-id'); if(notifyEl&&notifyEl.value.trim()) cfg.ownerNotifyId=notifyEl.value.trim(); save(); renderHeader(); renderPickupCard(); showToast('Store info saved! ✅'); }
 function padmSaveLogo(){ cfg.logoUrl=document.getElementById('padm-logo-url').value; cfg.logoEmoji=document.getElementById('padm-logo-emoji').value||'⚽'; cfg.brandName1=document.getElementById('padm-brand1').value; cfg.brandName2=document.getElementById('padm-brand2').value; save(); renderHeader(); showToast('Logo saved! 🎨'); }
 function padmSaveTheme(){
   THEME_COLORS.forEach(({key})=>{
