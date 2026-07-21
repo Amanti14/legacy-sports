@@ -249,6 +249,7 @@
       <div id="sync-status-bar" style="display:none;padding:8px 12px;border-radius:9px;margin-bottom:12px;font-size:12px;font-weight:600;text-align:center"></div>
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);border-radius:12px 12px 0 0;overflow:hidden;overflow-x:auto;scrollbar-width:none">
         <div class="padm-tab active" onclick="switchProfileAdminTab(0,this)">Products</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(8,this)">🎨 Custom</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(1,this)">Shipping</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(2,this)">Payment</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(3,this)">Store</div>
@@ -364,6 +365,13 @@
           </div>
           <div id="cust-list-wrap"><div style="padding:20px;text-align:center;font-size:12px;color:var(--gray)">Tap Refresh to load customer data.</div></div>
         </div>
+        <div class="padm-panel" id="padm-panel-8" style="padding:12px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:14px;line-height:1.5">Settings for the 🎨 Customize Jersey page — the customization fee, and the front/back photos shown when a customer previews a personalized jersey.</div>
+          <div class="adm-field"><label>Customization Fee (ETB)</label><input id="padm-custom-fee" type="number" min="0" placeholder="150"></div>
+          <button class="btn-save" onclick="padmSaveCustomFee()" style="width:100%;margin-bottom:18px">Save Fee</button>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px;line-height:1.5">Tap any kit to edit its Front / Back custom-preview images.</div>
+          <div id="padm-custom-list"></div>
+        </div>
       </div>
     </div>
     <!-- OWNER CONTROLS -->
@@ -453,7 +461,7 @@
       <input id="pm-img-back" type="url" placeholder="https://i.imgur.com/..." oninput="previewProdImgBack(this.value)">
       <div class="img-url-hint">Optional — back-of-jersey photo, shown on the Customize Jersey page.</div>
     </div>
-    <div class="adm-field"><label>Emoji (fallback)</label><input id="pm-emoji" type="text" placeholder="⚽" maxlength="4" oninput="if(!document.getElementById('pm-img').value)document.getElementById('prod-modal-preview').textContent=this.value||'🎽'"></div>
+    <div class="adm-field" id="pm-emoji-row"><label>Emoji (fallback)</label><input id="pm-emoji" type="text" placeholder="⚽" maxlength="4" oninput="if(!document.getElementById('pm-img').value)document.getElementById('prod-modal-preview').textContent=this.value||'🎽'"></div>
     <div class="adm-field" id="pm-name-row"><label>Kit Type</label><input id="pm-name" type="text" placeholder="Home Kit" readonly style="opacity:.6"></div>
     <div class="adm-field" id="pm-price-row"><label>Price (ETB)</label><input id="pm-price" type="number" placeholder="1850" min="0"></div>
     <div class="adm-field" id="pm-badge-row"><label>Badge</label><select id="pm-badge"><option value="">None</option><option value="new">NEW</option><option value="hot">HOT</option><option value="sale">SALE</option><option value="local">LOCAL</option></select></div>
@@ -2007,8 +2015,10 @@ function populatePadmForms(){
   const cu=document.getElementById('padm-currency'); const cp=document.getElementById('padm-cur-pos');
   if(cu) cu.value=cfg.currency||'ETB'; if(cp) cp.value=cfg.currencyPos||'before';
   const h=cfg.hero; [['padm-hero-tag',h.tag],['padm-hero-h1a',h.h1a],['padm-hero-h1b',h.h1b],['padm-hero-sub',h.sub],['padm-hero-img',h.imgUrl]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
+  const cf=document.getElementById('padm-custom-fee'); if(cf) cf.value=cfg.customFee||0;
 }
-function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); if(idx===7&&!_custDashData) loadCustomerDashboard(); }
+function padmSaveCustomFee(){ cfg.customFee=parseInt(document.getElementById('padm-custom-fee').value)||0; save(); showToast('Customization fee saved! ✅'); }
+function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); if(idx===7&&!_custDashData) loadCustomerDashboard(); if(idx===8) padmRenderCustomJerseys(); }
 
 function padmRenderProducts(){
   const list=document.getElementById('padm-products-list'); if(!list) return;
@@ -2096,12 +2106,31 @@ function openProdModal(lgId,teamId,prodId){
   modalCtx={type:'product',lgId,teamId,prodId};
   document.getElementById('prod-modal-title').textContent=`${team.name} — ${p.kitType}`;
   document.getElementById('pm-img').value=p.imgUrl||''; document.getElementById('pm-emoji').value=p.emoji||'⚽';
+  document.getElementById('pm-emoji-row').style.display='block';
   document.getElementById('pm-name-row').style.display='block'; document.getElementById('pm-price-row').style.display='block';
   document.getElementById('pm-badge-row').style.display='block'; document.getElementById('pm-desc-row').style.display='block';
-  document.getElementById('pm-img-back-row').style.display='block';
+  document.getElementById('pm-img-back-row').style.display='none';
+  document.getElementById('pm-img-label').textContent='Image URL (Front)';
   document.getElementById('pm-name').value=p.kitType; document.getElementById('pm-price').value=p.price;
   document.getElementById('pm-badge').value=p.badge||''; document.getElementById('pm-desc').value=p.desc||'';
   document.getElementById('pm-img-hint').textContent='Jersey image URL. Upload to imgur.com and paste the direct link.';
+  const prev=document.getElementById('prod-modal-preview');
+  if(p.imgUrl){ prev.innerHTML=`<img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.textContent='${p.emoji||'⚽'}'">` } else { prev.textContent=p.emoji||'⚽'; }
+  document.getElementById('prod-modal').style.display='block';
+}
+
+function openCustomImgModal(lgId,teamId,prodId){
+  const found=findProduct(prodId); if(!found) return;
+  const {p,team}=found;
+  modalCtx={type:'customImg',lgId,teamId,prodId};
+  document.getElementById('prod-modal-title').textContent=`${team.name} — ${p.kitType} (Custom Images)`;
+  document.getElementById('pm-img').value=p.imgUrl||''; document.getElementById('pm-emoji').value=p.emoji||'⚽';
+  document.getElementById('pm-emoji-row').style.display='none';
+  document.getElementById('pm-name-row').style.display='none'; document.getElementById('pm-price-row').style.display='none';
+  document.getElementById('pm-badge-row').style.display='none'; document.getElementById('pm-desc-row').style.display='none';
+  document.getElementById('pm-img-back-row').style.display='block';
+  document.getElementById('pm-img-label').textContent='Front Image (Custom Preview)';
+  document.getElementById('pm-img-hint').textContent='Shown as the front photo on the Customize Jersey page.';
   const prev=document.getElementById('prod-modal-preview');
   if(p.imgUrl){ prev.innerHTML=`<img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.textContent='${p.emoji||'⚽'}'">` } else { prev.textContent=p.emoji||'⚽'; }
   document.getElementById('pm-img-back').value=p.imgUrlBack||'';
@@ -2112,7 +2141,7 @@ function openProdModal(lgId,teamId,prodId){
 
 function closeProdModal(){
   document.getElementById('prod-modal').style.display='none';
-  ['pm-name-row','pm-price-row','pm-badge-row','pm-desc-row','pm-img-back-row'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+  ['pm-name-row','pm-price-row','pm-badge-row','pm-desc-row','pm-img-back-row','pm-emoji-row'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
   modalCtx=null;
 }
 
@@ -2135,8 +2164,12 @@ function saveProdModal(){
     save(); closeProdModal(); padmRenderProducts(); renderShopGrid(); showToast('Team logo saved! 🎨'); return;
   }
   const pidx=team.products.findIndex(p=>p.id===modalCtx.prodId); if(pidx===-1) return;
+  if(modalCtx.type==='customImg'){
+    team.products[pidx].imgUrl=document.getElementById('pm-img').value||'';
+    team.products[pidx].imgUrlBack=document.getElementById('pm-img-back').value||'';
+    save(); closeProdModal(); padmRenderCustomJerseys(); renderShopGrid(); showToast('Custom images saved! 🎨'); return;
+  }
   team.products[pidx].imgUrl=document.getElementById('pm-img').value||'';
-  team.products[pidx].imgUrlBack=document.getElementById('pm-img-back').value||'';
   team.products[pidx].emoji=document.getElementById('pm-emoji').value||'⚽';
   team.products[pidx].price=parseInt(document.getElementById('pm-price').value)||0;
   team.products[pidx].badge=document.getElementById('pm-badge').value||'';
