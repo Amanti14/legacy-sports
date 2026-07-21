@@ -1593,7 +1593,7 @@ let customState={product:null,size:null,qty:1,name:'',number:''};
 function getAllProductsFlat(){
   const out=[];
   cfg.leagues.forEach(lg=>(lg.teams||[]).forEach(team=>(team.products||[]).forEach(p=>{
-    out.push({...p,teamId:team.id,teamName:team.name,leagueId:lg.id,leagueLabel:lg.label,teamCrest:team.crestUrl||team.crest||'',teamEmoji:team.emoji,teamColor:team.color,name:`${team.name} ${p.kitType}`});
+    out.push({...p,teamId:team.id,teamName:team.name,leagueId:lg.id,leagueLabel:lg.label,teamCrest:team.crestUrl||team.crest||'',teamEmoji:team.emoji,name:`${team.name} ${p.kitType}`});
   })));
   return out;
 }
@@ -1617,16 +1617,9 @@ function renderCustomPage(all){
   const optionsHtml=Object.keys(grouped).map(lbl=>`<optgroup label="${lbl}">${grouped[lbl].map(p=>`<option value="${p.id}" ${p.id===customState.product.id?'selected':''}>${p.name} — ${fmt(p.price)}</option>`).join('')}</optgroup>`).join('');
   document.getElementById('custom-content').innerHTML=`
     <div style="padding:14px">
-      <div class="jersey-viewer" id="jersey-viewer">
-        <div class="jersey-viewer-inner" id="jersey-viewer-inner">
-          <div class="jersey-face" id="jersey-face-front"></div>
-          <div class="jersey-face" id="jersey-face-side"></div>
-          <div class="jersey-face" id="jersey-face-back">
-            <div id="custom-preview-name" class="jersey-back-name"></div>
-            <div id="custom-preview-number" class="jersey-back-number"></div>
-          </div>
-        </div>
-        <div class="jersey-viewer-hint" id="jersey-viewer-hint">↔ Drag or scroll to spin</div>
+      <div class="det-img-wrap" id="custom-preview-wrap" style="border-radius:16px;position:relative;aspect-ratio:1">
+        <div id="custom-preview-name" style="position:absolute;top:16%;left:0;right:0;text-align:center;font-weight:800;font-size:15px;letter-spacing:2px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,.6);text-transform:uppercase;padding:0 10px;word-break:break-word"></div>
+        <div id="custom-preview-number" style="position:absolute;top:32%;left:0;right:0;text-align:center;font-weight:900;font-size:64px;line-height:1;color:var(--accent);text-shadow:0 3px 10px rgba(0,0,0,.7);-webkit-text-stroke:1.5px var(--bg)"></div>
       </div>
       <div style="height:14px"></div>
 
@@ -1656,7 +1649,6 @@ function renderCustomPage(all){
       <button class="add-cart-btn" onclick="addCustomToCart()">Add Custom Jersey to Cart 🎨</button>
       <div style="height:20px"></div>
     </div>`;
-  jvSetupViewer();
   updateCustomPreview();
 }
 
@@ -1676,94 +1668,15 @@ function onCustomTextInput(){
   updateCustomPreview();
 }
 function updateCustomPreview(){
-  const frontEl=document.getElementById('jersey-face-front');
-  const sideEl=document.getElementById('jersey-face-side');
-  const backEl=document.getElementById('jersey-face-back');
-  if(!frontEl) return; // viewer not built yet
+  const wrap=document.getElementById('custom-preview-wrap'); if(!wrap) return;
   const p=customState.product;
-
-  const setFace=(el,dim)=>{
-    el.querySelectorAll('.jersey-face-fallback').forEach(n=>n.remove());
-    if(p.imgUrl){ el.style.backgroundImage=`url('${p.imgUrl}')`; el.style.filter=dim?'brightness(.8)':''; }
-    else { el.style.backgroundImage='none'; el.style.filter=''; el.insertAdjacentHTML('beforeend',`<div class="jersey-face-fallback">${p.emoji||'⚽'}</div>`); }
-  };
-  setFace(frontEl,false);
-  setFace(sideEl,true); // slightly darkened to read as a side profile
-
-  backEl.style.backgroundImage='none';
-  backEl.style.background=`linear-gradient(160deg, ${p.teamColor||'#222'}, #0d0d0d)`;
-
+  const imgHtml=p.imgUrl?`<img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentNode.style.background='var(--card2)'">`:`<div class="det-emoji" style="width:100%;text-align:center">${p.emoji||'⚽'}</div>`;
+  // rebuild base image without wiping the overlaid name/number nodes
+  let imgNode=wrap.querySelector('.custom-preview-img');
+  if(!imgNode){ wrap.insertAdjacentHTML('afterbegin',`<div class="custom-preview-img" style="position:absolute;inset:0">${imgHtml}</div>`); }
+  else{ imgNode.innerHTML=imgHtml; }
   document.getElementById('custom-preview-name').textContent=customState.name||'';
   document.getElementById('custom-preview-number').textContent=customState.number||'';
-  jvUpdateActiveFace();
-}
-
-// ── 3D JERSEY SPIN VIEWER ─────────────────────────────
-const JV_FACES=3, JV_ANGLE=360/JV_FACES; // front, side, back
-let jvRotation=0, jvDragging=false, jvStartX=0, jvStartRot=0, jvGlobalBound=false;
-
-function jvSetupViewer(){
-  const wrap=document.getElementById('jersey-viewer');
-  const inner=document.getElementById('jersey-viewer-inner');
-  if(!wrap||!inner) return;
-  const radius=(wrap.offsetWidth/2)/Math.tan(Math.PI/JV_FACES);
-  document.getElementById('jersey-face-front').style.transform=`rotateY(0deg) translateZ(${radius}px)`;
-  document.getElementById('jersey-face-side').style.transform=`rotateY(${JV_ANGLE}deg) translateZ(${radius}px)`;
-  document.getElementById('jersey-face-back').style.transform=`rotateY(${JV_ANGLE*2}deg) translateZ(${radius}px)`;
-  jvApplyRotation();
-
-  wrap.addEventListener('wheel',jvOnWheel,{passive:false});
-  wrap.addEventListener('mousedown',jvOnDragStart);
-  wrap.addEventListener('touchstart',jvOnDragStart,{passive:true});
-
-  if(!jvGlobalBound){ // only bind window-level listeners once, ever
-    window.addEventListener('mousemove',jvOnDragMove);
-    window.addEventListener('touchmove',jvOnDragMove,{passive:false});
-    window.addEventListener('mouseup',jvOnDragEnd);
-    window.addEventListener('touchend',jvOnDragEnd);
-    window.addEventListener('resize',()=>jvSetupViewer());
-    jvGlobalBound=true;
-  }
-}
-function jvOnWheel(e){ e.preventDefault(); jvRotation+=e.deltaY*0.3; jvApplyRotation(); jvHideHint(); }
-function jvOnDragStart(e){
-  jvDragging=true;
-  jvStartX=(e.touches?e.touches[0].clientX:e.clientX);
-  jvStartRot=jvRotation;
-  jvHideHint();
-}
-function jvOnDragMove(e){
-  if(!jvDragging) return;
-  const x=(e.touches?e.touches[0].clientX:e.clientX);
-  if(e.touches) e.preventDefault();
-  jvRotation=jvStartRot+(x-jvStartX)*0.5;
-  jvApplyRotation();
-}
-function jvOnDragEnd(){ jvDragging=false; }
-function jvHideHint(){ const h=document.getElementById('jersey-viewer-hint'); if(h) h.style.opacity='0'; }
-
-function jvApplyRotation(){
-  const inner=document.getElementById('jersey-viewer-inner');
-  if(inner) inner.style.transform=`rotateY(${jvRotation}deg)`;
-  jvUpdateActiveFace();
-}
-function jvUpdateActiveFace(){
-  const faceIds=['jersey-face-front','jersey-face-side','jersey-face-back'];
-  let best=0,bestDist=Infinity;
-  faceIds.forEach((id,i)=>{
-    const total=((jvRotation+i*JV_ANGLE)%360+360)%360;
-    const dist=Math.min(total,360-total);
-    if(dist<bestDist){bestDist=dist;best=i;}
-  });
-  faceIds.forEach((id,i)=>{
-    const el=document.getElementById(id);
-    if(el) el.classList.toggle('jv-active',i===best);
-  });
-  const onBack=best===2;
-  const nameEl=document.getElementById('custom-preview-name');
-  const numEl=document.getElementById('custom-preview-number');
-  if(nameEl) nameEl.style.opacity=onBack?'1':'0';
-  if(numEl) numEl.style.opacity=onBack?'1':'0';
 }
 function addCustomToCart(){
   const p=customState.product;
