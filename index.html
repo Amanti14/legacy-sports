@@ -71,6 +71,10 @@
 <div class="page active" id="page-shop">
   <div class="scroll">
     <div class="hero" id="hero-section">
+      <div class="hero-search-bar" onclick="goSearch()">
+        <span class="hero-search-icon">🔍</span>
+        <span class="hero-search-placeholder">Search teams, kits, leagues…</span>
+      </div>
       <div class="hero-tag" id="hero-tag">⚽ New Season 2024/25</div>
       <h1 id="hero-title">Official<br><span>Football Jerseys</span></h1>
       <p id="hero-subtitle">Authentic kits from top leagues worldwide</p>
@@ -426,7 +430,6 @@
 <!-- BOTTOM NAV -->
 <div class="bot-nav">
   <div class="nav-item active" id="nav-shop" onclick="goShop()"><div class="nav-icon">🏠</div><div class="nav-lbl">Shop</div></div>
-  <div class="nav-item" id="nav-search" onclick="goSearch()"><div class="nav-icon">🔍</div><div class="nav-lbl">Search</div></div>
   <div class="nav-item" id="nav-custom" onclick="goCustom()"><div class="nav-icon">🎨</div><div class="nav-lbl">Custom</div></div>
   <div class="nav-item" id="nav-cart" onclick="showCart()"><div class="nav-icon" style="position:relative">🛒<div id="nav-cart-badge" style="display:none;position:absolute;top:-6px;right:-8px;background:var(--accent);color:var(--bg);border-radius:50%;min-width:17px;height:17px;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</div></div><div class="nav-lbl">Cart</div></div>
   <div class="nav-item" id="nav-info" onclick="showInfo()"><div class="nav-icon">🏪</div><div class="nav-lbl">Store</div></div>
