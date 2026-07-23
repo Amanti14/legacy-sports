@@ -797,6 +797,23 @@ function applyDeletedProducts(c){
     team.products=(team.products||[]).filter(p=>!deleted.includes(p.id));
   }));
 }
+function nextProductId(){
+  let max=100;
+  cfg.leagues.forEach(lg=>(lg.teams||[]).forEach(t=>(t.products||[]).forEach(p=>{ if(p.id>max) max=p.id; })));
+  return max+1;
+}
+function addProduct(lgId,teamId){
+  const lg=cfg.leagues.find(l=>l.id===lgId); if(!lg) return;
+  const team=lg.teams.find(t=>t.id===teamId); if(!team) return;
+  const newId=nextProductId();
+  team.products=team.products||[];
+  team.products.push({id:newId,kitType:'New Kit',emoji:'🎽',imgUrl:'',backImgUrl:'',price:1500,badge:'',desc:''});
+  save();
+  padmRenderProducts();
+  renderShopGrid();
+  showToast('New kit added — fill in the details ✏️');
+  openProdModal(lgId,teamId,newId);
+}
 function deleteProduct(lgId,teamId,prodId){
   const lg=cfg.leagues.find(l=>l.id===lgId); if(!lg) return;
   const team=lg.teams.find(t=>t.id===teamId); if(!team) return;
@@ -829,9 +846,10 @@ function mergeLeagues(saved, defaults) {
       const mergedProds=defTeam.products.map(defProd=>{
         const savProd=spm[defProd.id];
         if(!savProd) return deepClone(defProd);
-        // Trust saved data completely — imgUrl, backImgUrl, price, badge, desc, emoji all from saved
+        // Trust saved data completely — kitType, imgUrl, backImgUrl, price, badge, desc, emoji all from saved
         return {
           ...deepClone(defProd),
+          kitType: savProd.kitType||defProd.kitType,
           imgUrl: savProd.imgUrl||'',
           backImgUrl: savProd.backImgUrl||'',
           emoji:  savProd.emoji||defProd.emoji,
@@ -840,6 +858,10 @@ function mergeLeagues(saved, defaults) {
           desc:   savProd.desc||defProd.desc,
         };
       });
+      // Keep any products that exist only in saved data (e.g. newly added via "+ Add Kit") —
+      // otherwise the merge would silently drop them since it only knows the original seed list.
+      const defIds=new Set(defTeam.products.map(dp=>dp.id));
+      (savTeam.products||[]).forEach(sp=>{ if(!defIds.has(sp.id)) mergedProds.push(deepClone(sp)); });
       return {
         ...deepClone(defTeam),
         crestUrl: savTeam.crestUrl||savTeam.crest||'',
@@ -2103,6 +2125,7 @@ function padmRenderProducts(){
           <div onclick="event.stopPropagation(); deleteProduct('${lg.id}','${team.id}',${p.id})" style="width:24px;height:24px;border-radius:7px;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-left:6px">✕</div>
         </div>`;
       });
+      html+=`<div onclick="addProduct('${lg.id}','${team.id}')" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;cursor:pointer;color:var(--accent);font-size:12px;font-weight:700">+ Add Kit</div>`;
       html+=`</div>`;
     });
   });
@@ -2194,6 +2217,7 @@ function saveProdModal(){
     save(); closeProdModal(); padmRenderProducts(); renderShopGrid(); showToast('Team logo saved! 🎨'); return;
   }
   const pidx=team.products.findIndex(p=>p.id===modalCtx.prodId); if(pidx===-1) return;
+  team.products[pidx].kitType=document.getElementById('pm-name').value||team.products[pidx].kitType;
   team.products[pidx].imgUrl=document.getElementById('pm-img').value||'';
   team.products[pidx].backImgUrl=document.getElementById('pm-back-img').value||'';
   team.products[pidx].emoji=document.getElementById('pm-emoji').value||'⚽';
