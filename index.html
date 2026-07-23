@@ -1694,9 +1694,9 @@ function updateCustomPreview(){
   const front=document.getElementById('j3d-front'), back=document.getElementById('j3d-back');
   if(!front||!back) return;
   const p=customState.product;
-  const frontImg=p.imgUrl?`<img src="${p.imgUrl}" onerror="this.style.display='none'">`:`<div class="det-emoji" style="font-size:60px">${p.emoji||'⚽'}</div>`;
+  const frontImg=p.imgUrl?`<img src="${p.imgUrl}" onerror="this.style.display='none'">`:`<div class="det-emoji" style="font-size:110px">${p.emoji||'⚽'}</div>`;
   const backSrc=p.backImgUrl||p.imgUrl;
-  const backImg=backSrc?`<img src="${backSrc}" onerror="this.style.display='none'">`:`<div class="det-emoji" style="font-size:60px">${p.emoji||'⚽'}</div>`;
+  const backImg=backSrc?`<img src="${backSrc}" onerror="this.style.display='none'">`:`<div class="det-emoji" style="font-size:110px">${p.emoji||'⚽'}</div>`;
   // rebuild image without clobbering the name/number overlay nodes in .j3d-back
   let frontImgNode=front.querySelector('.j3d-img');
   if(!frontImgNode){ front.insertAdjacentHTML('afterbegin',`<div class="j3d-img" style="position:absolute;inset:0">${frontImg}</div>`); }
