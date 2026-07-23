@@ -505,6 +505,7 @@ const DEFAULT_CONFIG = {
   theme:{"--accent":"#ffffff","--bg":"#1a1a1a","--card":"#242424","--dark":"#111111","--white":"#ffffff","--border":"#333333","--accent2":"#cccccc"},
   sizes:["XS","S","M","L","XL","XXL"],
   customFee:150,
+  deletedProductIds:[],
   shipping:[
     {id:"delivery",icon:"🚚",name:"Home Delivery",desc:"3–5 business days",price:80},
     {id:"pickup",  icon:"🏪",name:"Pick from Store",desc:"Ready in 1–2 hours · Addis",price:0},
@@ -787,6 +788,29 @@ const DEFAULT_CONFIG = {
 
 function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
 
+// Removes products the admin has explicitly deleted, even though mergeLeagues would
+// otherwise resurrect them from DEFAULT_CONFIG on the next sync/reload.
+function applyDeletedProducts(c){
+  const deleted=c.deletedProductIds||[];
+  if(!deleted.length) return;
+  (c.leagues||[]).forEach(lg=>(lg.teams||[]).forEach(team=>{
+    team.products=(team.products||[]).filter(p=>!deleted.includes(p.id));
+  }));
+}
+function deleteProduct(lgId,teamId,prodId){
+  const lg=cfg.leagues.find(l=>l.id===lgId); if(!lg) return;
+  const team=lg.teams.find(t=>t.id===teamId); if(!team) return;
+  const p=team.products.find(x=>x.id===prodId);
+  if(!confirm(`Delete "${team.name} ${p?p.kitType:''}"? This can't be undone and will remove it for all users.`)) return;
+  if(!cfg.deletedProductIds) cfg.deletedProductIds=[];
+  if(!cfg.deletedProductIds.includes(prodId)) cfg.deletedProductIds.push(prodId);
+  team.products=team.products.filter(x=>x.id!==prodId);
+  save();
+  padmRenderProducts();
+  renderShopGrid();
+  showToast('Product deleted 🗑️');
+}
+
 function mergeLeagues(saved, defaults) {
   // If no saved data, use defaults
   if(!saved||!saved.length) return deepClone(defaults);
@@ -911,6 +935,7 @@ function applyRemoteConfig(remote){
   cfg.leagues=remote.leagues&&remote.leagues.length
     ? mergeLeagues(remote.leagues, DEFAULT_CONFIG.leagues)
     : deepClone(DEFAULT_CONFIG.leagues);
+  applyDeletedProducts(cfg);
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
   // Always enforce hardcoded brand — cloud can never override the store name
   cfg.brandName1=DEFAULT_CONFIG.brandName1;
@@ -978,6 +1003,7 @@ if(savedCfg){
   cfg.leagues=savedCfg.leagues&&savedCfg.leagues.length
     ? mergeLeagues(savedCfg.leagues,DEFAULT_CONFIG.leagues)
     : deepClone(DEFAULT_CONFIG.leagues);
+  applyDeletedProducts(cfg);
   if(!cfg.payment) cfg.payment=deepClone(DEFAULT_CONFIG.payment);
 }
 else { cfg=deepClone(DEFAULT_CONFIG); }
@@ -2074,6 +2100,7 @@ function padmRenderProducts(){
             <div style="font-size:11px;color:var(--accent);font-weight:700">${fmt(p.price)}</div>
           </div>
           <div style="font-size:10px;color:var(--gray)">✏️ edit</div>
+          <div onclick="event.stopPropagation(); deleteProduct('${lg.id}','${team.id}',${p.id})" style="width:24px;height:24px;border-radius:7px;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-left:6px">✕</div>
         </div>`;
       });
       html+=`</div>`;
