@@ -1674,7 +1674,7 @@ function renderCustomPage(all){
   const optionsHtml=Object.keys(grouped).map(lbl=>`<optgroup label="${lbl}">${grouped[lbl].map(p=>`<option value="${p.id}" ${p.id===customState.product.id?'selected':''}>${p.name} — ${fmt(p.price)}</option>`).join('')}</optgroup>`).join('');
   document.getElementById('custom-content').innerHTML=`
     <div style="padding:14px">
-      <div id="custom-viewer-pinned" style="position:sticky;top:0;z-index:5;background:var(--bg);margin:0 -14px;padding:0 14px 6px;text-align:center">
+      <div id="custom-viewer-pinned" style="background:var(--bg);margin:0 -14px;padding:0 14px 6px;text-align:center">
         <div class="jersey3d-stage">
           <div class="jersey3d-box" id="j3d-box">
             <div class="j3d-face j3d-front" id="j3d-front"></div>
