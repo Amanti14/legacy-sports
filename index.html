@@ -2259,8 +2259,29 @@ async function loadAdminProfiles(ids){
     });
   }catch(e){ /* fall back silently to ID-only display */ }
 }
-function addAdmin(){ const inp=document.getElementById('new-admin-id-inp'); const val=(inp?.value||'').trim().replace(/\D/g,''); if(!val){ showToast('Enter a valid Telegram ID'); return; } if(OWNER_IDS.includes(val)){ showToast("That's an owner ID — owners already have full access"); return; } if((cfg.adminIds||[]).includes(val)){ showToast('Already an admin'); return; } if(!cfg.adminIds) cfg.adminIds=[]; cfg.adminIds.push(val); save(); syncAdminsToWorker(); if(inp) inp.value=''; renderManageAdmins(); showToast('Admin added! ✅'); }
-function removeAdmin(id){ cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id); save(); syncAdminsToWorker(); renderManageAdmins(); showToast('Admin removed'); }
+async function addAdmin(){
+  const inp=document.getElementById('new-admin-id-inp'); const val=(inp?.value||'').trim().replace(/\D/g,'');
+  if(!val){ showToast('Enter a valid Telegram ID'); return; }
+  if(OWNER_IDS.includes(val)){ showToast("That's an owner ID — owners already have full access"); return; }
+  if((cfg.adminIds||[]).includes(val)){ showToast('Already an admin'); return; }
+  if(!cfg.adminIds) cfg.adminIds=[];
+  cfg.adminIds.push(val);
+  localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); // save locally first so the UI updates immediately
+  if(inp) inp.value=''; renderManageAdmins();
+  const synced=await pushCloudConfig(false);
+  syncAdminsToWorker();
+  if(synced){ showToast('Admin added! ✅ Synced — they now have access.'); }
+  else{ showToast('⚠️ Added locally, but cloud sync failed — they will NOT have access yet. Open ☁️ Sync and tap "Push Config to Cloud" to retry.'); }
+}
+async function removeAdmin(id){
+  cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id);
+  localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
+  renderManageAdmins();
+  const synced=await pushCloudConfig(false);
+  syncAdminsToWorker();
+  if(synced){ showToast('Admin removed'); }
+  else{ showToast('⚠️ Removed locally, but cloud sync failed — they may still have access. Open ☁️ Sync and tap "Push Config to Cloud" to retry.'); }
+}
 // Tells the Worker who the current admins are, so the admin-dashboard endpoint (get_dashboard)
 // grants access to the right people. Only works if the caller is a verified owner — the Worker
 // checks tgInitData's Telegram signature, not anything the browser merely claims.
