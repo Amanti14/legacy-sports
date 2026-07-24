@@ -194,6 +194,23 @@
     <div style="height:14px"></div>
     <div class="info-card" id="store-info-card"></div>
     <div class="info-card"><h3>⚽ About Us</h3><p id="about-text" style="font-size:13px;color:var(--gray);line-height:1.6"></p></div>
+    <!-- CUSTOMERS (admin + owner only) -->
+    <div id="store-customers-section" style="display:none;margin:0 14px 12px">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0 10px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.5px;white-space:nowrap">👥 CUSTOMERS</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px">
+        <div style="font-size:11px;color:var(--gray);line-height:1.6;margin-bottom:12px">Visible only to you and other admins. Data is stored server-side and verified against your Telegram login — customers can't see this and other visitors can't fake admin access to it.</div>
+        <div id="cust-dash-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="cust-search" type="text" placeholder="Search name, @username, or ID…" oninput="renderCustomerList()" style="flex:1;background:var(--card2);border:1px solid var(--border);color:var(--white);padding:9px 12px;border-radius:9px;font-size:13px">
+          <button class="btn-outline" onclick="loadCustomerDashboard()">↻ Refresh</button>
+        </div>
+        <div id="cust-list-wrap"><div style="padding:20px;text-align:center;font-size:12px;color:var(--gray)">Tap Refresh to load customer data.</div></div>
+      </div>
+    </div>
     <div style="height:20px"></div>
   </div>
 </div>
@@ -249,7 +266,6 @@
         <div class="padm-tab" onclick="switchProfileAdminTab(4,this)">Theme</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(5,this)">Hero</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(6,this)">☁️ Sync</div>
-        <div class="padm-tab" onclick="switchProfileAdminTab(7,this)">👥 Customers</div>
       </div>
       <div style="background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
         <div class="padm-panel active" id="padm-panel-0" style="padding:12px">
@@ -334,16 +350,6 @@
           <button class="btn-outline" onclick="testCloudSync()" style="width:100%">Test Connection</button>
           <button class="btn-save" onclick="pushConfigToCloud()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#22c55e,#16a34a)">⬆️ Push Config to Cloud (apply to all users)</button>
           <button class="btn-outline" onclick="pullConfigFromCloud()" style="width:100%;margin-top:8px">⬇️ Pull Latest Config from Cloud</button>
-        </div>
-        <!-- CUSTOMERS TAB -->
-        <div class="padm-panel" id="padm-panel-7" style="padding:12px">
-          <div style="font-size:11px;color:var(--gray);line-height:1.6;margin-bottom:12px">Visible only to you and other admins. Data is stored server-side and verified against your Telegram login — customers can't see this and other visitors can't fake admin access to it.</div>
-          <div id="cust-dash-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"></div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input id="cust-search" type="text" placeholder="Search name, @username, or ID…" oninput="renderCustomerList()" style="flex:1;background:var(--card2);border:1px solid var(--border);color:var(--white);padding:9px 12px;border-radius:9px;font-size:13px">
-            <button class="btn-outline" onclick="loadCustomerDashboard()">↻ Refresh</button>
-          </div>
-          <div id="cust-list-wrap"><div style="padding:20px;text-align:center;font-size:12px;color:var(--gray)">Tap Refresh to load customer data.</div></div>
         </div>
       </div>
     </div>
@@ -2082,6 +2088,13 @@ function showInfo(){
     <div class="info-row"><div class="info-icon">📍</div><div class="info-text">${cfg.address}<span>Address</span></div></div>
     <div class="info-row"><div class="info-icon">⏰</div><div class="info-text">${cfg.hours}<span>Opening Hours</span></div></div>`;
   document.getElementById('about-text').textContent=cfg.about;
+  const custSec=document.getElementById('store-customers-section');
+  if(isAdmin()){
+    custSec.style.display='block';
+    if(!_custDashData) loadCustomerDashboard();
+  } else {
+    custSec.style.display='none';
+  }
   setNav('info'); showPage('info');
 }
 
@@ -2127,7 +2140,7 @@ function populatePadmForms(){
   if(cu) cu.value=cfg.currency||'ETB'; if(cp) cp.value=cfg.currencyPos||'before';
   const h=cfg.hero; [['padm-hero-tag',h.tag],['padm-hero-h1a',h.h1a],['padm-hero-h1b',h.h1b],['padm-hero-sub',h.sub],['padm-hero-img',h.imgUrl]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
 }
-function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); if(idx===7&&!_custDashData) loadCustomerDashboard(); }
+function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); }
 
 function padmRenderProducts(){
   const list=document.getElementById('padm-products-list'); if(!list) return;
