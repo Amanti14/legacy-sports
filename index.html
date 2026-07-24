@@ -1197,10 +1197,23 @@ async function submitTxnProof(){
   }
   verifying.style.display='none'; btn.disabled=false; btn.style.opacity='1';
   if(!result.ok){ showTxnError(result.error||'Verification failed. Please try again.',null,null); inp.style.borderColor='#ef4444'; return; }
+  let needsManualReview=false;
   if(result.status&&!['success','completed','approved','successful'].includes(result.status.toLowerCase())){
-    showTxnError(`Your transaction status is "${result.status}".\nOnly completed transactions are accepted.`,null,null); inp.style.borderColor='#ef4444'; return;
+    if(result.manualReview){
+      // The receipt link is valid, but the verifier couldn't automatically confirm the
+      // amount/account (e.g. CBE's page format changed). Let the order through instead of
+      // blocking the customer, but flag it so the store owner checks the receipt by hand.
+      needsManualReview=true;
+    } else {
+      showTxnError(`Your transaction status is "${result.status}".\nOnly completed transactions are accepted.`,null,null); inp.style.borderColor='#ef4444'; return;
+    }
   }
-  if(result.receiver&&expectedAccount){
+  if(_pendingOrder) _pendingOrder.needsManualReview=needsManualReview;
+  if(result.accountMatched===false){
+    showTxnError(`This receipt shows payment to a different account than the store's.\n\nPlease send to the correct account and paste the new receipt.`,null,null);
+    inp.style.borderColor='#ef4444'; return;
+  }
+  if(result.accountMatched===undefined&&result.receiver&&expectedAccount&&!result.receiver.includes('*')){
     const norm=s=>s.replace(/[\s\+]/g,'').replace(/^251/,'').replace(/^0/,'');
     const expN=norm(expectedAccount); const recN=norm(result.receiver);
     if(expN&&recN&&!recN.includes(expN)&&!expN.includes(recN)){
@@ -1964,7 +1977,8 @@ function placeOrder(){
 }
 
 function completeOrder(o){
-  const {sub,ship,total,m,buyer,phone,address,city,cartSnapshot,txnUrl}=o; const payMethod=o.paymentMethod;
+  const {sub,ship,total,m,buyer,phone,address,city,cartSnapshot,txnUrl}=o;
+  const payMethod=o.paymentMethod+(o.needsManualReview?' ⚠️ Needs Manual Review':'');
   const oid='EM'+Date.now().toString().slice(-6); const now=new Date();
   const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
