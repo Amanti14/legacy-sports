@@ -243,6 +243,7 @@
       <div id="sync-status-bar" style="display:none;padding:8px 12px;border-radius:9px;margin-bottom:12px;font-size:12px;font-weight:600;text-align:center"></div>
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card);border-radius:12px 12px 0 0;overflow:hidden;overflow-x:auto;scrollbar-width:none">
         <div class="padm-tab active" onclick="switchProfileAdminTab(0,this)">Products</div>
+        <div class="padm-tab" onclick="switchProfileAdminTab(8,this)">🎨 Custom</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(1,this)">Shipping</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(2,this)">Payment</div>
         <div class="padm-tab" onclick="switchProfileAdminTab(3,this)">Store</div>
@@ -326,6 +327,24 @@
           <div class="adm-field"><label>Hero Image URL</label><input id="padm-hero-img" type="url" placeholder="https://..."></div>
           <button class="btn-save" onclick="padmSaveHero()" style="width:100%">Save Hero</button>
         </div>
+        <!-- CUSTOM JERSEY TAB -->
+        <div class="padm-panel" id="padm-panel-8" style="padding:12px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:14px;line-height:1.6">
+            Set the customization fee charged when a customer adds a name/number, and choose the jersey font used on the back for each league.
+          </div>
+
+          <div class="adm-field" style="margin-bottom:16px">
+            <label>Customization Fee (ETB)</label>
+            <input id="padm-custom-fee" type="number" min="0" placeholder="150">
+            <div style="font-size:10px;color:var(--gray);margin-top:3px">Added on top of the jersey price when a customer customizes it.</div>
+          </div>
+
+          <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Jersey Font by League</div>
+          <div id="padm-league-fonts"></div>
+
+          <button class="btn-save" onclick="padmSaveCustom()" style="width:100%;margin-top:4px">Save Custom Settings</button>
+        </div>
+
         <!-- SYNC TAB -->
         <div class="padm-panel" id="padm-panel-6" style="padding:12px">
           <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">☁️ Cloud Sync Settings</div>
@@ -480,6 +499,15 @@ const DEFAULT_CONFIG = {
   theme:{"--accent":"#ffffff","--bg":"#1a1a1a","--card":"#242424","--dark":"#111111","--white":"#ffffff","--border":"#333333","--accent2":"#cccccc"},
   sizes:["XS","S","M","L","XL","XXL"],
   customFee:150,
+  leagueFonts:{
+    premier:    {font:'Georgia, serif'},
+    laliga:     {font:'"Arial Black", sans-serif'},
+    bundesliga: {font:'Impact, sans-serif'},
+    ligue1:     {font:'"Trebuchet MS", sans-serif'},
+    serie_a:    {font:'"Palatino Linotype", serif'},
+    ucl:        {font:'"Courier New", monospace'},
+    national:   {font:'Verdana, sans-serif'},
+  },
   deletedProductIds:[],
   shipping:[
     {id:"delivery",icon:"🚚",name:"Home Delivery",desc:"3–5 business days",price:80},
@@ -1760,8 +1788,16 @@ function updateCustomPreview(){
   let backImgNode=back.querySelector('.j3d-img');
   if(!backImgNode){ back.insertAdjacentHTML('afterbegin',`<div class="j3d-img" style="position:absolute;inset:0">${backImg}</div>`); }
   else{ backImgNode.innerHTML=backImg; }
-  document.getElementById('custom-preview-name').textContent=customState.name||'';
-  document.getElementById('custom-preview-number').textContent=customState.number||'';
+  const _lgFont=getLeagueFont(p.leagueId||'');
+  const _nameEl=document.getElementById('custom-preview-name');
+  const _numEl=document.getElementById('custom-preview-number');
+  if(_nameEl){ _nameEl.textContent=customState.name||''; _nameEl.style.fontFamily=_lgFont; }
+  if(_numEl){ _numEl.textContent=customState.number||''; _numEl.style.fontFamily=_lgFont; }
+}
+
+function getLeagueFont(leagueId){
+  const lf=(cfg.leagueFonts||{})[leagueId];
+  return lf&&lf.font ? lf.font : 'Georgia, serif';
 }
 
 // ── 3D rotation controls (drag + scroll/wheel) ─────────────────────
@@ -2106,7 +2142,7 @@ function populatePadmForms(){
   if(cu) cu.value=cfg.currency||'ETB'; if(cp) cp.value=cfg.currencyPos||'before';
   const h=cfg.hero; [['padm-hero-tag',h.tag],['padm-hero-h1a',h.h1a],['padm-hero-h1b',h.h1b],['padm-hero-sub',h.sub],['padm-hero-img',h.imgUrl]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v||''; });
 }
-function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); if(idx===7&&!_custDashData) loadCustomerDashboard(); }
+function switchProfileAdminTab(idx,el){ document.querySelectorAll('.padm-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.padm-panel').forEach(p=>p.classList.remove('active')); document.getElementById('padm-panel-'+idx).classList.add('active'); if(idx===6) updateSyncStatusPanel(); if(idx===4) renderThemeColorEditors(); if(idx===7&&!_custDashData) loadCustomerDashboard(); if(idx===8) renderLeagueFontPanel(); }
 
 function padmRenderProducts(){
   const list=document.getElementById('padm-products-list'); if(!list) return;
@@ -2389,6 +2425,61 @@ function openCustomerDetail(id){
   document.getElementById('cust-modal').style.display='block';
 }
 function closeCustModal(){ document.getElementById('cust-modal').style.display='none'; }
+
+// ── CUSTOM JERSEY ADMIN — fee + per-league fonts ──────
+const AVAILABLE_FONTS = [
+  {label:'Georgia (Classic Serif)',   value:'Georgia, serif'},
+  {label:'Arial Black (Bold)',        value:'"Arial Black", sans-serif'},
+  {label:'Impact (Strong Block)',     value:'Impact, sans-serif'},
+  {label:'Trebuchet MS (Modern)',     value:'"Trebuchet MS", sans-serif'},
+  {label:'Palatino (Elegant Serif)',  value:'"Palatino Linotype", serif'},
+  {label:'Courier New (Typewriter)',  value:'"Courier New", monospace'},
+  {label:'Verdana (Clean Round)',     value:'Verdana, sans-serif'},
+  {label:'Times New Roman (Classic)', value:'"Times New Roman", serif'},
+  {label:'Century Gothic (Futura)',   value:'"Century Gothic", sans-serif'},
+  {label:'Tahoma (Compact)',          value:'Tahoma, sans-serif'},
+];
+
+function renderLeagueFontPanel(){
+  const el=document.getElementById('padm-league-fonts'); if(!el) return;
+  const feeEl=document.getElementById('padm-custom-fee'); if(feeEl) feeEl.value=cfg.customFee||150;
+  const fonts=cfg.leagueFonts||{};
+  el.innerHTML=(cfg.leagues||[]).map(lg=>{
+    const lf=fonts[lg.id]||{font:'Georgia, serif'};
+    const opts=AVAILABLE_FONTS.map(f=>`<option value='${f.value}' ${f.value===lf.font?'selected':''}>${f.label}</option>`).join('');
+    return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">${lg.emoji}</span>
+        <span style="font-size:13px;font-weight:700">${lg.label}</span>
+      </div>
+      <div class="adm-field" style="margin-bottom:8px">
+        <label>Jersey Font</label>
+        <select id="lf-font-${lg.id}" onchange="previewLeagueFont('${lg.id}')">${opts}</select>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Live Preview</div>
+        <div id="lf-preview-${lg.id}" style="font-size:22px;font-weight:800;color:var(--white);letter-spacing:2px;font-family:${lf.font}">HENRY 10</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function previewLeagueFont(lgId){
+  const sel=document.getElementById('lf-font-'+lgId);
+  const prev=document.getElementById('lf-preview-'+lgId);
+  if(sel&&prev) prev.style.fontFamily=sel.value;
+}
+
+function padmSaveCustom(){
+  cfg.customFee=parseInt(document.getElementById('padm-custom-fee')?.value)||0;
+  if(!cfg.leagueFonts) cfg.leagueFonts={};
+  (cfg.leagues||[]).forEach(lg=>{
+    const sel=document.getElementById('lf-font-'+lg.id);
+    if(sel) cfg.leagueFonts[lg.id]={font:sel.value};
+  });
+  save();
+  showToast('Custom settings saved! 🎨');
+}
 
 function goShop(){ shopState={leagueId:'all',teamId:null,kitFilter:'all'}; renderLeagueTabs(); renderShopGrid(); updateBreadcrumb(); updateShopTitle(); setNav('shop'); showPage('shop'); }
 function goSearch(){
