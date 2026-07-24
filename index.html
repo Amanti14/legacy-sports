@@ -876,7 +876,11 @@ async function fetchCloudConfig(){
   finally{ clearTimeout(timeoutId); }
 }
 
-async function pushCloudConfig(showMsg=true){
+let _syncRetryTimer=null;
+let _syncRetryAttempt=0;
+const MAX_SYNC_RETRIES=6;
+
+async function pushCloudConfig(showMsg=true, _isAutoRetry=false){
   if(!tgInitData){
     setSyncStatus('❌ Sync requires opening this app inside Telegram','#ef4444');
     showMsg&&showToast('Cloud sync needs your verified Telegram session — open this app from inside Telegram, not a plain browser.');
@@ -889,13 +893,44 @@ async function pushCloudConfig(showMsg=true){
     cfg._lastUpdated=Date.now();
     const res=await fetch(BOT_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'push_config',initData:tgInitData,config:cfg}),signal:controller.signal});
     const data=await res.json().catch(()=>null);
-    if(res.ok&&data&&data.ok){ setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e'); showMsg&&showToast('Config pushed to all users! ✅'); _lastKnownRemoteTs=cfg._lastUpdated; return true; }
+    if(res.ok&&data&&data.ok){
+      setSyncStatus('✅ Synced to cloud — all users will see changes','#22c55e');
+      showMsg&&showToast('Config pushed to all users! ✅');
+      if(_isAutoRetry) showToast('✅ Auto-synced — your earlier change is now live for everyone.');
+      _lastKnownRemoteTs=cfg._lastUpdated; clearTimeout(_syncRetryTimer); _syncRetryAttempt=0;
+      return true;
+    }
     else{
       const reason=(data&&data.error)?data.error:`HTTP ${res.status} ${res.statusText}`;
-      setSyncStatus('❌ Sync failed — '+reason,'#ef4444'); showMsg&&showToast('Sync failed: '+reason); return false;
+      setSyncStatus('❌ Sync failed — '+reason,'#ef4444');
+      // Always surface a failure — this is what was silently swallowing changes before:
+      // background saves passed showMsg=false, so nobody ever saw sync fail.
+      showToast('⚠️ Auto-sync failed ('+reason+') — retrying automatically…');
+      scheduleSyncRetry();
+      return false;
     }
-  }catch(e){ const msg=e.name==='AbortError'?'Timed out reaching the Worker':(e.message||'Network error'); setSyncStatus('❌ '+msg,'#ef4444'); showMsg&&showToast('Network error during sync: '+msg); return false; }
+  }catch(e){
+    const msg=e.name==='AbortError'?'Timed out reaching the Worker':(e.message||'Network error');
+    setSyncStatus('❌ '+msg,'#ef4444');
+    showToast('⚠️ Auto-sync failed ('+msg+') — retrying automatically…');
+    scheduleSyncRetry();
+    return false;
+  }
   finally{ clearTimeout(timeoutId); }
+}
+
+// Keeps retrying a failed push in the background, with increasing delay, so an admin
+// never has to remember to manually hit "Push Config to Cloud" — a blip in connectivity
+// heals itself. Gives up after MAX_SYNC_RETRIES and points to the manual button as a fallback.
+function scheduleSyncRetry(){
+  clearTimeout(_syncRetryTimer);
+  if(_syncRetryAttempt>=MAX_SYNC_RETRIES){
+    showToast('⚠️ Auto-sync keeps failing — open ☁️ Sync and tap "Push Config to Cloud" to retry manually.');
+    return;
+  }
+  _syncRetryAttempt++;
+  const delay=Math.min(5000*Math.pow(2,_syncRetryAttempt-1),60000); // 5s,10s,20s,40s,60s,60s
+  _syncRetryTimer=setTimeout(()=>{ pushCloudConfig(false,true); },delay);
 }
 
 function setSyncStatus(msg,color){
@@ -977,7 +1012,11 @@ async function pollForRemoteChanges(){
 // Pause when app backgrounded, resume + immediate check when foregrounded
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ stopLiveSyncPolling(); }
-  else if(hasCloudSync()){ pollForRemoteChanges(); startLiveSyncPolling(); }
+  else{
+    if(hasCloudSync()){ pollForRemoteChanges(); startLiveSyncPolling(); }
+    // If a push was still waiting to retry (e.g. timer got throttled while backgrounded), try now.
+    if(_syncRetryAttempt>0){ clearTimeout(_syncRetryTimer); pushCloudConfig(false,true); }
+  }
 });
 
 function updateSyncStatusPanel(){
@@ -2236,19 +2275,21 @@ async function addAdmin(){
   cfg.adminIds.push(val);
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg)); // save locally first so the UI updates immediately
   if(inp) inp.value=''; renderManageAdmins();
+  showToast('Admin added — syncing… ☁️');
   const synced=await pushCloudConfig(false);
   syncAdminsToWorker();
-  if(synced){ showToast('Admin added! ✅ Synced — they now have access.'); }
-  else{ showToast('⚠️ Added locally, but cloud sync failed — they will NOT have access yet. Open ☁️ Sync and tap "Push Config to Cloud" to retry.'); }
+  if(synced) showToast('Synced! ✅ They now have access.');
+  // on failure, pushCloudConfig already showed why and is retrying automatically — no need to duplicate here
 }
 async function removeAdmin(id){
   cfg.adminIds=(cfg.adminIds||[]).filter(x=>x!==id);
   localStorage.setItem('emartzon_cfg',JSON.stringify(cfg));
   renderManageAdmins();
+  showToast('Admin removed — syncing… ☁️');
   const synced=await pushCloudConfig(false);
   syncAdminsToWorker();
-  if(synced){ showToast('Admin removed'); }
-  else{ showToast('⚠️ Removed locally, but cloud sync failed — they may still have access. Open ☁️ Sync and tap "Push Config to Cloud" to retry.'); }
+  if(synced) showToast('Synced! ✅');
+  // on failure, pushCloudConfig already showed why and is retrying automatically — no need to duplicate here
 }
 // Tells the Worker who the current admins are, so the admin-dashboard endpoint (get_dashboard)
 // grants access to the right people. Only works if the caller is a verified owner — the Worker
